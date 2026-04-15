@@ -1,0 +1,52 @@
+---
+// Hero 3D — client-only Three.js island. Initialized via inline script on idle.
+---
+
+<div class="hero-wrap" aria-hidden="true">
+  <canvas id="hero-canvas" class="hero-canvas"></canvas>
+  <noscript>
+    <svg class="hero-fallback" viewBox="-2 -2 4 4" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="0" cy="0" r="1.6" fill="none" stroke="currentColor" stroke-width="0.01" />
+      <circle cx="0" cy="0" r="1.2" fill="none" stroke="currentColor" stroke-width="0.01" />
+      <circle cx="0" cy="0" r="0.8" fill="none" stroke="currentColor" stroke-width="0.01" />
+    </svg>
+  </noscript>
+</div>
+
+<script>
+  import { initHero } from '~/scripts/hero';
+  const el = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
+  if (el) {
+    const start = () => initHero(el);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(start, { timeout: 1500 });
+    } else {
+      setTimeout(start, 200);
+    }
+  }
+</script>
+
+<style>
+  .hero-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: min(640px, 90vw);
+    margin: 0 auto;
+  }
+  .hero-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .hero-fallback {
+    width: 100%;
+    height: 100%;
+    color: var(--color-ink);
+  }
+  @media (min-width: 48rem) {
+    .hero-wrap {
+      max-width: 560px;
+    }
+  }
+</style>

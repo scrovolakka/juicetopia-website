@@ -1,0 +1,100 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  chapterNumber: number;
+  totalChapters: number;
+  publishedAt: Date;
+}
+const { title, chapterNumber, totalChapters, publishedAt } = Astro.props;
+
+const padded = String(chapterNumber).padStart(2, '0');
+const totalPad = String(totalChapters).padStart(2, '0');
+const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
+---
+
+<BaseLayout title={title} mode="bone" showRouteIndex={false}>
+  <article class="reading">
+    <aside class="rail mono" aria-hidden="true">
+      <div>CH.{padded}</div>
+      <div class="acid">/</div>
+      <div>{totalPad}</div>
+      <div class="meta-dim">{dateStr}</div>
+    </aside>
+
+    <header class="head">
+      <p class="mono">[01 / NOVEL] · CH.{padded} / {totalPad}</p>
+      <h1>{title}</h1>
+      <p class="mono meta-dim">{dateStr} · TOKYO</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <div class="body">
+      <slot />
+    </div>
+
+    <div class="rule"></div>
+
+    <slot name="nav" />
+  </article>
+</BaseLayout>
+
+<style>
+  .reading {
+    max-width: var(--max-reading);
+    margin-inline: auto;
+    display: grid;
+    gap: var(--space-8);
+    position: relative;
+  }
+  .rail {
+    position: absolute;
+    left: calc(var(--max-reading) * -0.22);
+    top: 0;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-3);
+    color: var(--color-ink-muted);
+  }
+  .rail .acid {
+    color: var(--color-acid);
+  }
+  @media (max-width: 60rem) {
+    .rail {
+      display: none;
+    }
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .head h1 {
+    font-family: var(--font-mincho);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+  .body {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    letter-spacing: var(--ls-reading);
+  }
+  .body :global(p) {
+    text-indent: 1em;
+    margin-block: 1.4em;
+  }
+  .body :global(p:first-child) {
+    margin-top: 0;
+  }
+  @media (min-width: 64rem) {
+    .body {
+      font-size: 1.125rem;
+    }
+  }
+</style>

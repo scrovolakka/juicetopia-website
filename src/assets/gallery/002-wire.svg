@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <rect width="800" height="800" fill="#0A0908"/>
+  <g stroke="#EFEBE2" stroke-width="1" fill="none" opacity="0.7">
+    <polygon points="400,120 620,260 620,540 400,680 180,540 180,260"/>
+    <polygon points="400,200 540,290 540,510 400,600 260,510 260,290"/>
+    <polygon points="400,280 460,320 460,480 400,520 340,480 340,320"/>
+    <line x1="400" y1="120" x2="400" y2="680"/>
+    <line x1="180" y1="260" x2="620" y2="540"/>
+    <line x1="620" y1="260" x2="180" y2="540"/>
+  </g>
+  <circle cx="400" cy="400" r="10" fill="#D8FF3A"/>
+  <text x="40" y="760" font-family="monospace" font-size="14" fill="#EFEBE2" letter-spacing="4">JCT.V.0002</text>
+</svg>
