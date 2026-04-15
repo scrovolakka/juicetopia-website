@@ -2,10 +2,10 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// NOTE: Update `site` to the real GitHub username / custom domain before deploy.
-// If deploying to a user site (<user>.github.io) or a custom domain, set `base: '/'`.
+// Deployed as a project site at scrovolakka.github.io/juicetopia-website/
+// If ever moved to a user site (scrovolakka.github.io) or a custom domain, set `base: '/'`.
 export default defineConfig({
-  site: 'https://example.github.io',
+  site: 'https://scrovolakka.github.io',
   base: '/juicetopia-website',
   output: 'static',
   trailingSlash: 'always',
