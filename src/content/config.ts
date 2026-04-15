@@ -7,6 +7,8 @@ const novel = defineCollection({
     chapterNumber: z.number().int().positive(),
     publishedAt: z.coerce.date(),
     summary: z.string().optional(),
+    series: z.string().optional(),
+    seriesOrder: z.number().int().optional(),
   }),
 });
 
