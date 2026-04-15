@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <rect width="800" height="800" fill="#0A0908"/>
+  <g stroke="#D8FF3A" stroke-width="0.5" opacity="0.35" fill="none">
+    <path d="M0 100 H800 M0 200 H800 M0 300 H800 M0 400 H800 M0 500 H800 M0 600 H800 M0 700 H800"/>
+    <path d="M100 0 V800 M200 0 V800 M300 0 V800 M400 0 V800 M500 0 V800 M600 0 V800 M700 0 V800"/>
+  </g>
+  <circle cx="400" cy="400" r="220" fill="none" stroke="#D8FF3A" stroke-width="1.5"/>
+  <circle cx="400" cy="400" r="120" fill="none" stroke="#EFEBE2" stroke-width="1"/>
+  <text x="40" y="760" font-family="monospace" font-size="14" fill="#EFEBE2" letter-spacing="4">JCT.V.0001</text>
+</svg>

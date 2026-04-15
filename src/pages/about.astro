@@ -1,0 +1,103 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="ABOUT" description="juicetopia — about the archive.">
+  <article class="about page-column">
+    <header class="about-head">
+      <h1 class="about-title">ABOUT<br /><span class="jp">について</span></h1>
+      <p class="mono">[04 / ABOUT] · CURATION NOTE · A.02</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <section class="about-body flow-8">
+      <p>
+        juicetopia は、小説とビジュアルを公開するための小さなアーカイブです。網羅的ではなく、あえて選び取った断片だけを置いています。
+      </p>
+      <p>
+        目次は三つ。<a class="acid-link" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/novel/`}>小説</a> は読み物の欄。<a class="acid-link" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/gallery/`}>ギャラリー</a>
+         は画像の欄。<a class="acid-link" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/characters/`}
+          >キャラクター</a
+        > は登場人物の欄です。
+      </p>
+      <p>
+        サイト全体に走る走査線とグレインは、古い映像機器の記録であることを示すためのものです。電源は切っていません。
+      </p>
+    </section>
+
+    <div class="rule"></div>
+
+    <section class="about-credits flow">
+      <h2>CREDITS</h2>
+      <dl class="mono">
+        <div><dt>BUILD</dt><dd>Astro · Three.js</dd></div>
+        <div><dt>TYPE</dt><dd>Space Grotesk · JetBrains Mono · Shippori Mincho B1 · Noto Sans JP</dd></div>
+        <div><dt>ACCENT</dt><dd>#D8FF3A <span class="meta-dim">— CHARTREUSE / CITRUS-ACID</span></dd></div>
+        <div><dt>ARCHIVE</dt><dd>JCT · A.02</dd></div>
+      </dl>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .about {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .about-head {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .about-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--ls-display);
+    line-height: 0.95;
+  }
+  .about-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.35em;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .about-body {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    letter-spacing: var(--ls-reading);
+    max-width: var(--max-reading);
+  }
+  .about-credits h2 {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    text-transform: uppercase;
+  }
+  .about-credits dl {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .about-credits dl > div {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+    padding-top: var(--space-3);
+  }
+  .about-credits dt {
+    color: var(--color-ink-muted);
+  }
+  .about-credits dd {
+    color: var(--color-ink);
+  }
+  @media (max-width: 40rem) {
+    .about-credits dl > div {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+</style>

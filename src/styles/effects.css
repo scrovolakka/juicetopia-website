@@ -1,0 +1,132 @@
+/* ============================================================
+   Effects: grain, scanlines, acid hover, route-sweep
+   ============================================================ */
+
+.fx-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-grain);
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: var(--grain-url);
+  background-size: 220px 220px;
+  background-repeat: repeat;
+}
+
+[data-mode='void'] .fx-grain {
+  mix-blend-mode: screen;
+  opacity: 0.045;
+}
+
+.fx-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-scanlines);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(var(--scanline-ink), 0.035) 3px,
+    transparent 4px
+  );
+}
+
+/* Route-sweep (acid horizontal bar, triggered on nav) */
+.fx-sweep {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-sweep);
+  overflow: hidden;
+}
+.fx-sweep::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -4px;
+  height: 2px;
+  background: var(--color-acid);
+  box-shadow: 0 0 12px var(--color-acid-dim);
+  transform: translateY(-100%);
+}
+.fx-sweep.is-running::after {
+  animation: sweep-down 260ms var(--ease-out) forwards;
+}
+
+@keyframes sweep-down {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* Acid link — underline from left + chromatic aberration on hover */
+.acid-link {
+  position: relative;
+  display: inline-block;
+  color: var(--color-ink);
+  transition: text-shadow var(--dur-fast) var(--ease-out);
+}
+
+.acid-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--color-acid);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+
+.acid-link:hover::after,
+.acid-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.acid-link:hover,
+.acid-link:focus-visible {
+  text-shadow:
+    -1px 0 0 var(--color-ca-magenta),
+    1px 0 0 var(--color-ca-cyan);
+}
+
+/* View-transition-friendly fade for page contents */
+.page-fade {
+  animation: page-in var(--dur-slow) var(--ease-out) both;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reduced motion — kill all movement, keep static textures */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .fx-sweep.is-running::after {
+    animation: none;
+  }
+  .acid-link:hover,
+  .acid-link:focus-visible {
+    text-shadow: none;
+  }
+}

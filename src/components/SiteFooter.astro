@@ -1,0 +1,69 @@
+---
+const year = new Date().getFullYear();
+const mmxxvi = (() => {
+  // simple roman numeral for current year (covers 1900-2099)
+  const n = year;
+  const numerals: [number, string][] = [
+    [1000, 'M'],
+    [900, 'CM'],
+    [500, 'D'],
+    [400, 'CD'],
+    [100, 'C'],
+    [90, 'XC'],
+    [50, 'L'],
+    [40, 'XL'],
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ];
+  let x = n;
+  let out = '';
+  for (const [v, s] of numerals) {
+    while (x >= v) {
+      out += s;
+      x -= v;
+    }
+  }
+  return out;
+})();
+---
+
+<footer class="site-footer">
+  <div class="rule"></div>
+  <div class="bar">
+    <div class="mono">
+      <span>JCT</span><span class="sep">·</span><span>{mmxxvi}</span><span class="sep">·</span><span>A.02</span>
+    </div>
+    <div class="mono meta-dim">
+      <span>NO-PART-OF-THIS-ARCHIVE-MAY-BE-REPRODUCED</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-section);
+  }
+  .rule {
+    border-top: 1px solid var(--color-rule);
+  }
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--page-pad) var(--space-8);
+    flex-wrap: wrap;
+  }
+  .sep {
+    color: var(--color-acid);
+    padding: 0 0.4em;
+  }
+  @media (max-width: 48rem) {
+    .bar > :last-child {
+      font-size: 0.625rem;
+    }
+  }
+</style>

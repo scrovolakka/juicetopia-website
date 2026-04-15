@@ -1,0 +1,164 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+
+export async function getStaticPaths() {
+  const all = await getCollection('gallery');
+  const sorted = all.sort((a, b) => a.data.order - b.data.order);
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.slug },
+    props: {
+      entry,
+      prev: sorted[i - 1] ?? null,
+      next: sorted[i + 1] ?? null,
+      index: i + 1,
+      total: sorted.length,
+    },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<'gallery'>;
+  prev: CollectionEntry<'gallery'> | null;
+  next: CollectionEntry<'gallery'> | null;
+  index: number;
+  total: number;
+}
+
+const { entry, prev, next, index, total } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const pad = (n: number) => String(n).padStart(4, '0');
+const date = entry.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
+const { Content } = await entry.render();
+---
+
+<BaseLayout title={`${entry.data.title} / GALLERY`} mode="void" showRouteIndex={false}>
+  <article class="detail page-column">
+    <header class="detail-head">
+      <p class="mono">[02 / GALLERY] · V.{pad(index)} / {pad(total)}</p>
+    </header>
+
+    <div class="image-frame">
+      <Image
+        src={entry.data.image}
+        alt={entry.data.alt}
+        class="image"
+        widths={[640, 960, 1280]}
+        sizes="(min-width: 72rem) 900px, 90vw"
+      />
+    </div>
+
+    <div class="caption">
+      <h1 class="title">{entry.data.title}</h1>
+      <dl class="mono">
+        <div><dt>DATE</dt><dd>{date}</dd></div>
+        <div><dt>MEDIUM</dt><dd>{entry.data.medium}</dd></div>
+        {entry.data.dimensions && (<div><dt>DIM</dt><dd>{entry.data.dimensions}</dd></div>)}
+      </dl>
+      <div class="note">
+        <Content />
+      </div>
+    </div>
+
+    <nav class="pager" aria-label="Image navigation">
+      <div class="slot">
+        {
+          prev ? (
+            <a class="acid-link mono" href={`${base}/gallery/${prev.slug}/`}>
+              <span class="acid">[←]</span> V.{pad(index - 1)}
+            </a>
+          ) : (
+            <span class="mono meta-dim">[—]</span>
+          )
+        }
+      </div>
+      <div class="slot center">
+        <a class="acid-link mono" href={`${base}/gallery/`}>INDEX</a>
+      </div>
+      <div class="slot right">
+        {
+          next ? (
+            <a class="acid-link mono" href={`${base}/gallery/${next.slug}/`}>
+              V.{pad(index + 1)} <span class="acid">[→]</span>
+            </a>
+          ) : (
+            <span class="mono meta-dim">[—]</span>
+          )
+        }
+      </div>
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .detail {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .image-frame {
+    border: 1px solid var(--color-rule);
+    background: #050504;
+    overflow: hidden;
+    max-width: 960px;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .caption {
+    max-width: var(--max-reading);
+    margin-inline: auto;
+    display: grid;
+    gap: var(--space-4);
+    width: 100%;
+  }
+  .title {
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  dl {
+    display: grid;
+    gap: var(--space-2);
+  }
+  dl > div {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: var(--space-3);
+    border-top: 1px solid var(--color-rule);
+    padding-top: var(--space-2);
+  }
+  dt {
+    color: var(--color-ink-muted);
+  }
+  .note {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-body);
+    line-height: var(--lh-reading);
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+    padding-top: var(--space-4);
+  }
+  .slot.right {
+    text-align: right;
+  }
+  .slot.center {
+    text-align: center;
+  }
+  .acid {
+    color: var(--color-acid);
+  }
+</style>

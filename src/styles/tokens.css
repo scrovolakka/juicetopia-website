@@ -1,0 +1,94 @@
+/* ============================================================
+   juicetopia / design tokens
+   Two modes: bone (paper) and void (dark room)
+   Switched via <html data-mode="bone|void">
+   ============================================================ */
+
+:root,
+[data-mode='bone'] {
+  --color-bg: #efebe2;
+  --color-ink: #0f0e0c;
+  --color-ink-muted: #6b6a63;
+  --color-rule: rgba(15, 14, 12, 0.12);
+  --color-rule-strong: rgba(15, 14, 12, 0.28);
+  --scanline-ink: 15, 14, 12;
+}
+
+[data-mode='void'] {
+  --color-bg: #0a0908;
+  --color-ink: #efebe2;
+  --color-ink-muted: #9a9690;
+  --color-rule: rgba(239, 235, 226, 0.15);
+  --color-rule-strong: rgba(239, 235, 226, 0.32);
+  --scanline-ink: 239, 235, 226;
+}
+
+:root {
+  /* Accent is mode-agnostic */
+  --color-acid: #d8ff3a;
+  --color-acid-dim: rgba(216, 255, 58, 0.55);
+  --color-ca-magenta: #ff00e6;
+  --color-ca-cyan: #00ffe6;
+
+  /* Typography */
+  --font-display: 'Redaction 70', 'Shippori Mincho B1', 'Times New Roman', serif;
+  --font-sans:
+    'Space Grotesk', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+    'Hiragino Kaku Gothic ProN', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+  --font-mincho:
+    'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+
+  /* Type scale */
+  --fs-meta: 0.6875rem; /* 11 */
+  --fs-body: 0.9375rem; /* 15 */
+  --fs-body-jp: 0.9375rem;
+  --fs-reading: 1.0625rem; /* 17 */
+  --fs-h3: 1.125rem;
+  --fs-h2: 1.5rem;
+  --fs-h1: clamp(2.5rem, 8vw, 5rem);
+
+  /* Line heights */
+  --lh-body: 1.65;
+  --lh-reading: 1.95;
+  --lh-meta: 1.5;
+
+  /* Letter spacing */
+  --ls-meta: 0.12em;
+  --ls-body: 0.01em;
+  --ls-reading: 0.05em;
+  --ls-display: -0.02em;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+  --space-section: clamp(5rem, 10vw, 8rem);
+  --page-pad: clamp(1rem, 3vw, 2rem);
+
+  /* Widths */
+  --max-reading: 40rem;
+  --max-page: 72rem;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+  --dur-fast: 150ms;
+  --dur-mid: 240ms;
+  --dur-slow: 400ms;
+
+  /* Z layers */
+  --z-scanlines: 9998;
+  --z-grain: 9999;
+  --z-sweep: 10000;
+  --z-header: 100;
+
+  color-scheme: light dark;
+}

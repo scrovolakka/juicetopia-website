@@ -1,0 +1,60 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ReadingLayout from '~/layouts/ReadingLayout.astro';
+import ChapterNav from '~/components/ChapterNav.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('novel');
+  const sorted = all.sort((a, b) => a.data.chapterNumber - b.data.chapterNumber);
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.slug },
+    props: {
+      entry,
+      prev: sorted[i - 1] ?? null,
+      next: sorted[i + 1] ?? null,
+      total: sorted.length,
+    },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<'novel'>;
+  prev: CollectionEntry<'novel'> | null;
+  next: CollectionEntry<'novel'> | null;
+  total: number;
+}
+
+const { entry, prev, next, total } = Astro.props;
+const { Content } = await entry.render();
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<ReadingLayout
+  title={entry.data.title}
+  chapterNumber={entry.data.chapterNumber}
+  totalChapters={total}
+  publishedAt={entry.data.publishedAt}
+>
+  <Content />
+
+  <ChapterNav
+    slot="nav"
+    indexHref={`${base}/novel/`}
+    current={entry.data.chapterNumber}
+    total={total}
+    prev={prev
+      ? {
+          href: `${base}/novel/${prev.slug}/`,
+          chapter: prev.data.chapterNumber,
+          title: prev.data.title,
+        }
+      : undefined}
+    next={next
+      ? {
+          href: `${base}/novel/${next.slug}/`,
+          chapter: next.data.chapterNumber,
+          title: next.data.title,
+        }
+      : undefined}
+  />
+</ReadingLayout>

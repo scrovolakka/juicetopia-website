@@ -1,0 +1,100 @@
+---
+import '~/styles/tokens.css';
+import '~/styles/base.css';
+import '~/styles/effects.css';
+import '~/styles/utilities.css';
+
+import SiteHeader from '~/components/SiteHeader.astro';
+import SiteFooter from '~/components/SiteFooter.astro';
+import RouteIndex from '~/components/RouteIndex.astro';
+import { modeFor, routeIndex } from '~/lib/nav';
+
+interface Props {
+  title?: string;
+  description?: string;
+  mode?: 'bone' | 'void';
+  showRouteIndex?: boolean;
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const path = Astro.url.pathname.replace(base, '') || '/';
+const autoMode = modeFor(path);
+const { title, description, mode = autoMode, showRouteIndex = true } = Astro.props;
+
+const pageTitle = title ? `${title} — juicetopia` : 'juicetopia';
+const desc = description ?? 'juicetopia — an archive of fiction and images.';
+const current = routeIndex(path);
+const grainHref = `${base}/grain.svg`;
+---
+
+<!doctype html>
+<html lang="ja" data-mode={mode}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+
+    <!-- Fonts: Space Grotesk, JetBrains Mono, Shippori Mincho B1, Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho+B1:wght@400;500&family=Space+Grotesk:wght@400;500&display=swap"
+    />
+
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content="website" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body style={`--grain-url: url('${grainHref}');`}>
+    <div class="fx-scanlines" aria-hidden="true"></div>
+    <div class="fx-grain" aria-hidden="true"></div>
+    <div id="fx-sweep" class="fx-sweep" aria-hidden="true"></div>
+
+    <SiteHeader />
+
+    <main class="page page-fade">
+      {
+        showRouteIndex && current && (
+          <div class="page-column route-head">
+            <RouteIndex id={current.id} label={current.label} />
+          </div>
+        )
+      }
+      <slot />
+    </main>
+
+    <SiteFooter />
+
+    <script>
+      // Trigger sweep on internal link clicks (skip modifier keys and external / hash)
+      const sweep = document.getElementById('fx-sweep');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+      document.addEventListener('click', (e) => {
+        const target = (e.target as HTMLElement)?.closest('a');
+        if (!target) return;
+        if (reduce.matches) return;
+        const href = target.getAttribute('href') ?? '';
+        if (!href || href.startsWith('#')) return;
+        if (target.target === '_blank') return;
+        const url = new URL(href, location.href);
+        if (url.origin !== location.origin) return;
+        if (!sweep) return;
+        sweep.classList.remove('is-running');
+        // Force reflow to restart animation
+        void sweep.offsetWidth;
+        sweep.classList.add('is-running');
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .route-head {
+    margin-bottom: var(--space-8);
+  }
+</style>

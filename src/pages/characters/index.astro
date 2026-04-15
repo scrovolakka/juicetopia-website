@@ -1,0 +1,142 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+const all = await getCollection('characters');
+const chars = await Promise.all(
+  all
+    .sort((a, b) => a.data.order - b.data.order)
+    .map(async (c) => ({ entry: c, rendered: await c.render() })),
+);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<BaseLayout title="CHARACTERS" description="juicetopia dramatis personae.">
+  <section class="characters page-column flow-16">
+    <header class="flow">
+      <h1 class="section-title">
+        CHARACTERS<br />
+        <span class="jp">登場人物</span>
+      </h1>
+      <p class="mono">DRAMATIS PERSONAE · {pad(chars.length)} ENTR{chars.length === 1 ? 'Y' : 'IES'}</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <ul class="char-list">
+      {
+        chars.map(({ entry, rendered }) => {
+          const { Content } = rendered;
+          return (
+            <li class="char">
+              <div class="portrait">
+                <Image src={entry.data.portrait} alt={entry.data.name} widths={[240, 480]} sizes="(min-width: 48rem) 240px, 50vw" />
+              </div>
+              <div class="info">
+                <p class="mono">
+                  <span class="acid">[{entry.data.charId}]</span>
+                </p>
+                <h2 class="name">
+                  <span class="jp-name">{entry.data.name}</span>
+                  {entry.data.reading && <span class="reading mono">{entry.data.reading}</span>}
+                </h2>
+                <div class="bio">
+                  <Content />
+                </div>
+              </div>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .section-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.32em;
+    letter-spacing: 0.25em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .char-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-12);
+  }
+  .char {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-8);
+    align-items: start;
+    border-top: 1px solid var(--color-rule);
+    padding-top: var(--space-8);
+  }
+  .char:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .portrait {
+    width: 240px;
+    height: 240px;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    background: var(--color-bg);
+  }
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .info {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .name {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    font-weight: 500;
+  }
+  .jp-name {
+    font-family: var(--font-mincho);
+    font-size: 1.75rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+  }
+  .reading {
+    color: var(--color-ink-muted);
+  }
+  .bio {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    letter-spacing: 0.04em;
+    max-width: 40ch;
+  }
+
+  @media (max-width: 48rem) {
+    .char {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+    .portrait {
+      width: 180px;
+      height: 180px;
+    }
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout title="ERR 404" description="Not in the archive." showRouteIndex={false}>
+  <div class="nf page-column">
+    <p class="mono">[ERR 404] · LOST TRANSMISSION</p>
+    <h1 class="nf-title">NO SIGNAL</h1>
+    <p class="nf-jp">このページはアーカイブに存在しません。</p>
+    <a class="acid-link mono" href={`${base}/`}>[00] RETURN TO INDEX →</a>
+  </div>
+</BaseLayout>
+
+<style>
+  .nf {
+    display: grid;
+    gap: var(--space-6);
+    justify-items: start;
+    padding-block: var(--space-16);
+  }
+  .nf-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 12vw, 8rem);
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+  }
+  .nf-jp {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    color: var(--color-ink);
+    letter-spacing: var(--ls-reading);
+  }
+</style>

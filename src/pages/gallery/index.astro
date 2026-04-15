@@ -1,0 +1,129 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const all = await getCollection('gallery');
+const items = all.sort((a, b) => a.data.order - b.data.order);
+const pad = (n: number) => String(n).padStart(4, '0');
+---
+
+<BaseLayout title="GALLERY" description="juicetopia visual archive." mode="void">
+  <section class="gallery page-column flow-16">
+    <header class="flow">
+      <h1 class="section-title">
+        GALLERY<br />
+        <span class="jp">画集</span>
+      </h1>
+      <p class="mono">ARCHIVE · {pad(items.length)} ENTR{items.length === 1 ? 'Y' : 'IES'}</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <ul class="grid">
+      {
+        items.map((it, i) => {
+          const n = pad(i + 1);
+          const date = it.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
+          const href = `${base}/gallery/${it.slug}/`;
+          return (
+            <li class="cell">
+              <a href={href} class="cell-link">
+                <div class="img-wrap">
+                  <Image src={it.data.image} alt={it.data.alt} class="img" widths={[480, 800]} sizes="(min-width: 48rem) 33vw, 50vw" />
+                </div>
+                <div class="meta mono">
+                  <span class="acid">[V.{n}]</span>
+                  <span>{date}</span>
+                  <span class="sep">·</span>
+                  <span>{it.data.medium}</span>
+                </div>
+                <div class="title">{it.data.title}</div>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .section-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.32em;
+    letter-spacing: 0.25em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8) var(--space-6);
+  }
+  @media (min-width: 48rem) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 72rem) {
+    .grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .cell-link {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .img-wrap {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #050504;
+    border: 1px solid var(--color-rule);
+    transition:
+      border-color var(--dur-mid) var(--ease-out),
+      filter var(--dur-mid) var(--ease-out);
+  }
+  .img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .cell-link:hover .img-wrap,
+  .cell-link:focus-visible .img-wrap {
+    border-color: var(--color-acid);
+    filter: saturate(1.1);
+  }
+  .cell-link:hover .img,
+  .cell-link:focus-visible .img {
+    transform: scale(1.015);
+  }
+  .meta {
+    display: flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+  }
+  .meta .sep {
+    color: var(--color-acid);
+  }
+  .title {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+  }
+</style>
