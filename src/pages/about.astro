@@ -24,6 +24,41 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
       <p>
         サイト全体に走る走査線とグレインは、古い映像機器の記録であることを示すためのものです。電源は切っていません。
       </p>
+      <p>
+        世界の固有名詞は、以下の <span class="mono meta-dim">WORLD NOTES</span> にいくらか置いています。通読の必要はありません。本文を読むためにも、注釈を読むためにも。
+      </p>
+    </section>
+
+    <div class="rule"></div>
+
+    <section class="about-codex flow">
+      <h2>WORLD NOTES <span class="jp-sub">—— 世界注</span></h2>
+      <dl class="mono">
+        <div>
+          <dt>聖杯</dt>
+          <dd>情報の器。古い容器として記述され、しばしば器のない器として機能する。<span class="meta-dim">GRAIL / OS</span></dd>
+        </div>
+        <div>
+          <dt>命令詩</dt>
+          <dd>空気を震わせるのではなく、定義を書き換える言葉。発声者は多く、読解者は少ない。<span class="meta-dim">COMMAND VERSE</span></dd>
+        </div>
+        <div>
+          <dt>果汁化</dt>
+          <dd>記憶・経験・存在を流動資源へと圧搾する手続き。残渣は、ときに記憶として拾われる。<span class="meta-dim">JUICEFICATION</span></dd>
+        </div>
+        <div>
+          <dt>ジューストニウム</dt>
+          <dd>結晶化された果汁。採掘可能、可搬、爆発的。時代を一度ずらした物質。<span class="meta-dim">JUICETNIUM</span></dd>
+        </div>
+        <div>
+          <dt>脚注王制</dt>
+          <dd>本文ではなく注釈によって世界を統治する体制。法は増殖し、本文は読みにくくなる。<span class="meta-dim">FOOTNOTE MONARCHY</span></dd>
+        </div>
+        <div>
+          <dt>ジューサー</dt>
+          <dd>搾る者。聖杯との古い契約を世代ごとに引き継ぐ家系。稀に、契約から降りる者がいる。<span class="meta-dim">JUICER</span></dd>
+        </div>
+      </dl>
     </section>
 
     <div class="rule"></div>
@@ -70,6 +105,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     letter-spacing: var(--ls-reading);
     max-width: var(--max-reading);
   }
+  .about-codex h2,
   .about-credits h2 {
     font-family: var(--font-mono);
     font-size: var(--fs-meta);
@@ -77,24 +113,54 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     color: var(--color-ink-muted);
     text-transform: uppercase;
   }
+  .about-codex h2 .jp-sub {
+    font-family: var(--font-mincho);
+    font-size: 0.9em;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+    text-transform: none;
+    margin-left: 0.5em;
+  }
+  .about-codex dl,
   .about-credits dl {
     display: grid;
     gap: var(--space-3);
   }
+  .about-codex dl > div,
   .about-credits dl > div {
     display: grid;
-    grid-template-columns: 8rem 1fr;
+    grid-template-columns: 10rem 1fr;
     gap: var(--space-4);
     border-top: 1px solid var(--color-rule);
     padding-top: var(--space-3);
   }
+  .about-codex dt,
   .about-credits dt {
     color: var(--color-ink-muted);
+    font-family: var(--font-mincho);
+    letter-spacing: 0.12em;
   }
+  .about-credits dt {
+    font-family: var(--font-mono);
+    letter-spacing: var(--ls-meta);
+  }
+  .about-codex dd,
   .about-credits dd {
     color: var(--color-ink);
   }
+  .about-codex dd {
+    font-family: var(--font-mincho);
+    line-height: var(--lh-reading);
+  }
+  .about-codex dd .meta-dim {
+    display: inline-block;
+    margin-left: 0.75em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+  }
   @media (max-width: 40rem) {
+    .about-codex dl > div,
     .about-credits dl > div {
       grid-template-columns: 1fr;
       gap: var(--space-1);
