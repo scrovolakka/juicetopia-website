@@ -5,18 +5,18 @@ import Logotype from '~/components/Logotype.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const links = [
-  { id: '01', label: 'NOVEL', href: `${base}/novel/`, jp: '小説' },
-  { id: '02', label: 'GALLERY', href: `${base}/gallery/`, jp: '絵' },
-  { id: '03', label: 'CHARACTERS', href: `${base}/characters/`, jp: '人物' },
+  { id: '01', label: 'LEYDA-MONO', href: `${base}/novel/`, jp: '小説' },
+  { id: '02', label: 'MONTRA-MESA', href: `${base}/gallery/`, jp: '絵' },
+  { id: '03', label: 'NOMA-DI MOKURO', href: `${base}/characters/`, jp: '人物' },
 ];
 ---
 
 <BaseLayout mode="void" showRouteIndex={false}>
   <section class="index-hero">
     <div class="hero-meta mono">
-      <span>[00 / INDEX]</span>
+      <span>[00 / MOKURO]</span>
       <span class="sep">·</span>
-      <span>TRANSMISSION 001</span>
+      <span>VOLA 001</span>
     </div>
 
     <div class="wordmark-stage">
@@ -29,10 +29,10 @@ const links = [
 
     <p class="tagline">
       <span class="jp">電子果汁アーカイブ</span>
-      <span class="en mono">an archive of fiction & images — curated, incomplete.</span>
+      <span class="en mono">pana-di leyda-mono & montra-mesa — norma-tak, manka-kel.</span>
     </p>
 
-    <nav class="index-links" aria-label="Sections">
+    <nav class="index-links" aria-label="Banda">
       <ul>
         {
           links.map((l) => (

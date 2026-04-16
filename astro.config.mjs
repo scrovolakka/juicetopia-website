@@ -3,6 +3,8 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import remarkTcy from './src/plugins/remark-tcy';
 import remarkRuby from './src/plugins/remark-ruby';
+import remarkBlockquoteCaption from './src/plugins/remark-blockquote-caption';
+import remarkNoIndent from './src/plugins/remark-no-indent';
 
 // Deployed as a project site at scrovolakka.github.io/juicetopia-website/
 // If ever moved to a user site (scrovolakka.github.io) or a custom domain, set `base: '/'`.
@@ -13,7 +15,7 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [sitemap()],
   markdown: {
-    remarkPlugins: [remarkRuby, remarkTcy],
+    remarkPlugins: [remarkRuby, remarkTcy, remarkBlockquoteCaption, remarkNoIndent],
   },
   image: {
     // Astro 5 uses sharp by default; explicit here for clarity.

@@ -6,11 +6,11 @@ export type NavItem = {
 };
 
 export const NAV: NavItem[] = [
-  { id: '00', label: 'INDEX', href: '/', mode: 'void' },
-  { id: '01', label: 'NOVEL', href: '/novel/', mode: 'bone' },
-  { id: '02', label: 'GALLERY', href: '/gallery/', mode: 'void' },
-  { id: '03', label: 'CHARACTERS', href: '/characters/', mode: 'bone' },
-  { id: '04', label: 'ABOUT', href: '/about/', mode: 'bone' },
+  { id: '00', label: 'MOKURO', href: '/', mode: 'void' },
+  { id: '01', label: 'LEYDA-MONO', href: '/novel/', mode: 'bone' },
+  { id: '02', label: 'MONTRA-MESA', href: '/gallery/', mode: 'void' },
+  { id: '03', label: 'NOMA-DI MOKURO', href: '/characters/', mode: 'bone' },
+  { id: '04', label: 'NOTA', href: '/about/', mode: 'bone' },
 ];
 
 export function routeIndex(pathname: string): NavItem | undefined {

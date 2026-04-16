@@ -12,14 +12,14 @@ const chars = await Promise.all(
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<BaseLayout title="CHARACTERS" description="juicetopia dramatis personae.">
+<BaseLayout title="NOMA-DI MOKURO" description="juicetopia noma-di pana.">
   <section class="characters page-column flow-16">
     <header class="flow">
       <h1 class="section-title">
-        CHARACTERS<br />
+        NOMA-DI MOKURO<br />
         <span class="jp">登場人物</span>
       </h1>
-      <p class="mono">DRAMATIS PERSONAE · {pad(chars.length)} ENTR{chars.length === 1 ? 'Y' : 'IES'}</p>
+      <p class="mono">NOMA-DI PANA · {pad(chars.length)} FAKTA</p>
     </header>
 
     <div class="rule"></div>

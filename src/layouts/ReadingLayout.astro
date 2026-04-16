@@ -7,8 +7,9 @@ interface Props {
   chapterNumber: number;
   totalChapters: number;
   publishedAt: Date;
+  indent?: boolean;
 }
-const { title, chapterNumber, totalChapters, publishedAt } = Astro.props;
+const { title, chapterNumber, totalChapters, publishedAt, indent = true } = Astro.props;
 
 const padded = String(chapterNumber).padStart(2, '0');
 const totalPad = String(totalChapters).padStart(2, '0');
@@ -16,9 +17,9 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
 ---
 
 <BaseLayout title={title} mode="bone" showRouteIndex={false}>
-  <article class="reading" data-writing="horizontal">
+  <article class="reading" data-writing="horizontal" data-indent={String(indent)}>
     <aside class="rail mono" aria-hidden="true">
-      <div>CH.{padded}</div>
+      <div>ST.{padded}</div>
       <div class="acid">/</div>
       <div>{totalPad}</div>
       <div class="meta-dim">{dateStr}</div>
@@ -26,11 +27,11 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
 
     <header class="head">
       <div class="head-top">
-        <p class="mono">[01 / NOVEL] · CH.{padded} / {totalPad}</p>
+        <p class="mono">[01 / LEYDA-MONO] · ST.{padded} / {totalPad}</p>
         <WritingModeToggle />
       </div>
       <h1>{title}</h1>
-      <p class="mono meta-dim">{dateStr} · OSAKA</p>
+      <p class="mono meta-dim">{dateStr} · OSAKA-SHU</p>
     </header>
 
     <div class="rule"></div>
@@ -66,7 +67,7 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     left: calc(var(--max-reading) * -0.22);
     top: 0;
     writing-mode: vertical-rl;
-    text-orientation: mixed;
+    text-orientation: upright;
     display: flex;
     flex-direction: row;
     gap: var(--space-3);
@@ -111,6 +112,12 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     text-indent: 1em;
     margin-block: 1.4em;
   }
+  [data-indent='false'] .body :global(p) {
+    text-indent: 0;
+  }
+  .body :global(p[data-no-indent]) {
+    text-indent: 0;
+  }
   .body :global(p:first-child) {
     margin-top: 0;
   }
@@ -139,7 +146,7 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
 
   [data-writing='vertical'] .body {
     writing-mode: vertical-rl;
-    text-orientation: mixed;
+    text-orientation: upright;
     line-break: strict;
     word-break: normal;
     overflow-wrap: break-word;
@@ -152,6 +159,9 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
   [data-writing='vertical'] .body :global(p) {
     text-indent: 1em;
     margin-block: 1.4em;
+  }
+  [data-indent='false'][data-writing='vertical'] .body :global(p) {
+    text-indent: 0;
   }
 
   [data-writing='vertical'] .body :global(p:first-child) {
@@ -211,6 +221,46 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     padding: 0.15em 0.35em;
     background: color-mix(in srgb, var(--color-bg) 88%, var(--color-ink) 12%);
     border: 1px solid var(--color-rule);
+  }
+
+  /* Quote figure (blockquote with caption) */
+  .body :global(.quote-figure) {
+    margin-block: 2em;
+    padding: 0;
+  }
+  .body :global(.quote-figure blockquote) {
+    margin: 0;
+    padding-inline-start: 1.5em;
+    border-inline-start: 2px solid var(--color-acid);
+    font-style: italic;
+  }
+  .body :global(.quote-figure blockquote p) {
+    text-indent: 0;
+  }
+  .body :global(.quote-figure figcaption) {
+    margin-top: 0.75em;
+    padding-inline-start: 1.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    font-style: normal;
+  }
+  .body :global(.quote-figure figcaption p) {
+    text-indent: 0;
+    margin: 0;
+  }
+
+  /* Quote figure — vertical mode */
+  [data-writing='vertical'] .body :global(.quote-figure blockquote) {
+    border-inline-start: none;
+    border-block-start: 2px solid var(--color-acid);
+    padding-inline-start: 0;
+    padding-block-start: 1.5em;
+  }
+  [data-writing='vertical'] .body :global(.quote-figure figcaption) {
+    padding-inline-start: 0;
+    padding-block-start: 0.5em;
   }
 
   /* Scroll fade hint (left edge) */

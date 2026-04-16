@@ -2,7 +2,7 @@
 title: "豚の定理、あるいは深夜における可算無限の敗北について"
 chapterNumber: 53
 publishedAt: 2026-04-15
-series: "長編"
+series: "短編"
 seriesOrder: 4
 summary: "深夜、可算無限が豚の前で静かに敗北する。"
 ---

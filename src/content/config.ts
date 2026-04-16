@@ -9,6 +9,7 @@ const novel = defineCollection({
     summary: z.string().optional(),
     series: z.string().optional(),
     seriesOrder: z.number().int().optional(),
+    indent: z.boolean().default(true),
   }),
 });
 

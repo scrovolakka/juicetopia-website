@@ -26,11 +26,11 @@ for (const arr of groups.values()) {
 // Display order: main line → serialised cycles → shorts → long-form archive.
 const seriesOrderList = ['', '泥の断章', '脚注の王', '短編', '長編'];
 const labelMap: Record<string, { label: string; sub: string }> = {
-  '': { label: 'MAIN LINE', sub: '本編' },
-  '泥の断章': { label: 'MUD FRAGMENTS', sub: '泥の断章' },
-  '脚注の王': { label: 'THE FOOTNOTE KING', sub: '脚注の王' },
-  '短編': { label: 'SHORTS', sub: '短編' },
-  '長編': { label: 'LONG FORM', sub: 'アーカイブ' },
+  '': { label: 'RIGOLA UN-MA', sub: '本編' },
+  '泥の断章': { label: 'DORO-DI BANDA', sub: '泥の断章' },
+  '脚注の王': { label: 'NOTA-DI DOL-SHA', sub: '脚注の王' },
+  '短編': { label: 'MONO KORTA', sub: '短編' },
+  '長編': { label: 'MONO LONGA', sub: 'アーカイブ' },
 };
 const sections = seriesOrderList
   .filter((k) => groups.has(k))
@@ -41,14 +41,14 @@ const sections = seriesOrderList
   }));
 ---
 
-<BaseLayout title="NOVEL" description="juicetopia novel index.">
+<BaseLayout title="LEYDA-MONO" description="juicetopia leyda-mono mokuro.">
   <section class="novel-index page-column flow-16">
     <header class="flow">
       <h1 class="section-title">
-        NOVEL<br />
+        LEYDA-MONO<br />
         <span class="jp">小説</span>
       </h1>
-      <p class="mono">INDEX · {pad(total)} CHAPTER{total === 1 ? '' : 'S'} · {sections.length} SECTION{sections.length === 1 ? '' : 'S'}</p>
+      <p class="mono">MOKURO · {pad(total)} STRATA · {sections.length} BANDA</p>
     </header>
 
     <div class="rule"></div>
@@ -61,7 +61,7 @@ const sections = seriesOrderList
               {sec.meta.label}
               <span class="sec-sub mono">{sec.meta.sub}</span>
             </h2>
-            <span class="sec-count mono meta-dim">{pad(sec.items.length)} ENTR{sec.items.length === 1 ? 'Y' : 'IES'}</span>
+            <span class="sec-count mono meta-dim">{pad(sec.items.length)} FAKTA</span>
           </header>
           <ol class="ch-list">
             {sec.items.map((c) => {
@@ -70,7 +70,7 @@ const sections = seriesOrderList
               return (
                 <li class="ch">
                   <a class="ch-link" href={href}>
-                    <span class="col-num mono">CH.{pad(c.data.chapterNumber)}</span>
+                    <span class="col-num mono">ST.{pad(c.data.chapterNumber)}</span>
                     <span class="col-title">{c.data.title}</span>
                     <span class="col-date mono meta-dim">{date}</span>
                   </a>

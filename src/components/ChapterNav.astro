@@ -10,13 +10,13 @@ const { prev, next, indexHref, current, total } = Astro.props;
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<nav class="ch-nav" aria-label="Chapter navigation">
+<nav class="ch-nav" aria-label="Strata-di mokuro">
   <div class="slot prev">
     {
       prev ? (
         <a class="acid-link mono" href={prev.href}>
           <span class="arrow">[←]</span>
-          <span class="lbl">CH.{pad(prev.chapter)}</span>
+          <span class="lbl">ST.{pad(prev.chapter)}</span>
           <span class="t">{prev.title}</span>
         </a>
       ) : (
@@ -27,7 +27,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   <div class="slot idx">
     <a class="acid-link mono" href={indexHref}>
       <span>{pad(current)}</span><span class="sep">/</span><span>{pad(total)}</span>
-      <span class="lbl">INDEX</span>
+      <span class="lbl">MOKURO</span>
     </a>
   </div>
   <div class="slot next">
@@ -35,7 +35,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       next ? (
         <a class="acid-link mono" href={next.href}>
           <span class="t">{next.title}</span>
-          <span class="lbl">CH.{pad(next.chapter)}</span>
+          <span class="lbl">ST.{pad(next.chapter)}</span>
           <span class="arrow">[→]</span>
         </a>
       ) : (

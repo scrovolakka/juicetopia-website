@@ -33,10 +33,10 @@ const date = entry.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
 const { Content } = await entry.render();
 ---
 
-<BaseLayout title={`${entry.data.title} / GALLERY`} mode="void" showRouteIndex={false}>
+<BaseLayout title={`${entry.data.title} / MONTRA-MESA`} mode="void" showRouteIndex={false}>
   <article class="detail page-column">
     <header class="detail-head">
-      <p class="mono">[02 / GALLERY] · V.{pad(index)} / {pad(total)}</p>
+      <p class="mono">[02 / MONTRA-MESA] · V.{pad(index)} / {pad(total)}</p>
     </header>
 
     <div class="image-frame">
@@ -52,16 +52,16 @@ const { Content } = await entry.render();
     <div class="caption">
       <h1 class="title">{entry.data.title}</h1>
       <dl class="mono">
-        <div><dt>DATE</dt><dd>{date}</dd></div>
-        <div><dt>MEDIUM</dt><dd>{entry.data.medium}</dd></div>
-        {entry.data.dimensions && (<div><dt>DIM</dt><dd>{entry.data.dimensions}</dd></div>)}
+        <div><dt>DATA</dt><dd>{date}</dd></div>
+        <div><dt>MONO</dt><dd>{entry.data.medium}</dd></div>
+        {entry.data.dimensions && (<div><dt>METRA-FAKTA</dt><dd>{entry.data.dimensions}</dd></div>)}
       </dl>
       <div class="note">
         <Content />
       </div>
     </div>
 
-    <nav class="pager" aria-label="Image navigation">
+    <nav class="pager" aria-label="Mira-di mokuro">
       <div class="slot">
         {
           prev ? (
@@ -74,7 +74,7 @@ const { Content } = await entry.render();
         }
       </div>
       <div class="slot center">
-        <a class="acid-link mono" href={`${base}/gallery/`}>INDEX</a>
+        <a class="acid-link mono" href={`${base}/gallery/`}>MOKURO</a>
       </div>
       <div class="slot right">
         {

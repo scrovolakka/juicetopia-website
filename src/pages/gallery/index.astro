@@ -9,14 +9,14 @@ const items = all.sort((a, b) => a.data.order - b.data.order);
 const pad = (n: number) => String(n).padStart(4, '0');
 ---
 
-<BaseLayout title="GALLERY" description="juicetopia visual archive." mode="void">
+<BaseLayout title="MONTRA-MESA" description="juicetopia montra-mesa pana." mode="void">
   <section class="gallery page-column flow-16">
     <header class="flow">
       <h1 class="section-title">
-        GALLERY<br />
+        MONTRA-MESA<br />
         <span class="jp">画集</span>
       </h1>
-      <p class="mono">ARCHIVE · {pad(items.length)} ENTR{items.length === 1 ? 'Y' : 'IES'}</p>
+      <p class="mono">PANA · {pad(items.length)} FAKTA</p>
     </header>
 
     <div class="rule"></div>
