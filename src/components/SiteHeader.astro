@@ -37,14 +37,65 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       </ul>
     </nav>
 
+    <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span class="burger-line"></span>
+      <span class="burger-line"></span>
+    </button>
+
     <div class="right mono">
       <span>{buildDate}</span>
       <span class="sep">·</span>
       <span>OSAKA-SHU</span>
     </div>
   </div>
+
+  <!-- Mobile drawer -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <nav>
+      <ul>
+        {
+          NAV.map((item) => {
+            const isCurrent = current?.id === item.id;
+            const href = (base + item.href).replace(/\/+/g, '/');
+            return (
+              <li>
+                <a
+                  class:list={['drawer-link', { 'is-current': isCurrent }]}
+                  href={href}
+                  aria-current={isCurrent ? 'page' : undefined}
+                >
+                  <span class="n">{isCurrent ? `_${item.id}_` : `[${item.id}]`}</span>
+                  <span class="l">{item.label}</span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </nav>
+  </div>
+
   <div class="rule"></div>
 </header>
+
+<script>
+  const burger = document.getElementById('burger');
+  const drawer = document.getElementById('drawer');
+  if (burger && drawer) {
+    burger.addEventListener('click', () => {
+      const open = drawer.getAttribute('aria-hidden') === 'false';
+      drawer.setAttribute('aria-hidden', String(open));
+      burger.setAttribute('aria-expanded', String(!open));
+    });
+    // Close on link click
+    drawer.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', () => {
+        drawer.setAttribute('aria-hidden', 'true');
+        burger.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+</script>
 
 <style>
   .site-header {
@@ -99,6 +150,31 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     padding-bottom: 2px;
   }
 
+  /* Burger button — hidden on desktop */
+  .burger {
+    display: none;
+    justify-self: end;
+    width: 2rem;
+    height: 2rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+  }
+  .burger-line {
+    display: block;
+    width: 1.25rem;
+    height: 1.5px;
+    background: var(--color-ink);
+    transition: transform var(--dur-mid) var(--ease-out), opacity var(--dur-mid) var(--ease-out);
+  }
+  .burger[aria-expanded='true'] .burger-line:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+  .burger[aria-expanded='true'] .burger-line:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
   .right {
     justify-self: end;
     display: inline-flex;
@@ -114,29 +190,57 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     border-bottom: 1px solid var(--color-rule);
   }
 
+  /* Drawer — hidden by default */
+  .drawer {
+    display: none;
+  }
+  .drawer[aria-hidden='false'] {
+    display: block;
+  }
+  .drawer nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+  }
+  .drawer-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    padding: var(--space-3) var(--page-pad);
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    text-transform: uppercase;
+    color: var(--color-ink);
+    border-top: 1px solid var(--color-rule);
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .drawer-link:hover,
+  .drawer-link:focus-visible {
+    background: color-mix(in srgb, var(--color-bg) 88%, var(--color-acid) 12%);
+  }
+  .drawer-link .n {
+    color: var(--color-acid);
+    font-weight: 500;
+  }
+  .drawer-link.is-current .l {
+    color: var(--color-acid);
+  }
+
   @media (max-width: 48rem) {
     .bar {
-      grid-template-columns: auto 1fr;
-      grid-template-rows: auto auto;
-      gap: var(--space-2) var(--space-4);
+      grid-template-columns: auto 1fr auto;
       padding-block: var(--space-3);
+    }
+    .nav {
+      display: none;
     }
     .right {
       display: none;
     }
-    .nav {
-      grid-column: 1 / -1;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .nav::-webkit-scrollbar {
-      display: none;
-    }
-    .nav ul {
-      justify-content: flex-start;
-      gap: var(--space-3);
-      flex-wrap: nowrap;
-      padding-bottom: var(--space-1);
+    .burger {
+      display: flex;
     }
   }
 </style>
