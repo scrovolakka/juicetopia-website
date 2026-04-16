@@ -164,6 +164,55 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     -webkit-text-combine: horizontal;
   }
 
+  /* Code blocks — stay horizontal in vertical mode */
+  [data-writing='vertical'] .body :global(pre) {
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+    display: block;
+    max-width: none;
+    max-height: 24rem;
+    overflow-x: auto;
+    overflow-y: auto;
+    margin-block: 1.5em;
+    padding: var(--space-4);
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+    border: 1px solid var(--color-rule);
+    border-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    letter-spacing: 0;
+    white-space: pre;
+    tab-size: 2;
+  }
+  [data-writing='vertical'] .body :global(code) {
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+  }
+
+  /* Code blocks — horizontal mode */
+  .body :global(pre) {
+    overflow-x: auto;
+    margin-block: 1.5em;
+    padding: var(--space-4);
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+    border: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    letter-spacing: 0;
+    tab-size: 2;
+  }
+  .body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .body :global(:not(pre) > code) {
+    padding: 0.15em 0.35em;
+    background: color-mix(in srgb, var(--color-bg) 88%, var(--color-ink) 12%);
+    border: 1px solid var(--color-rule);
+  }
+
   /* Scroll fade hint (left edge) */
   [data-writing='vertical'] .body-scroll::after {
     content: '';
