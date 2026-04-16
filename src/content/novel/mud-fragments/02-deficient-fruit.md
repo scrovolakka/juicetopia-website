@@ -1,5 +1,5 @@
 ---
-title: "泥の断章 #2 —— 欠損する果実"
+title: "#2 欠損する果実"
 chapterNumber: 11
 publishedAt: 2026-04-15
 series: "泥の断章"

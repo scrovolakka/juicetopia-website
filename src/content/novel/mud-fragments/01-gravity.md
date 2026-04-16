@@ -1,5 +1,5 @@
 ---
-title: "泥の断章 #1 —— 暁の澱、あるいは重力について"
+title: "#1 暁の澱、あるいは重力について"
 chapterNumber: 10
 publishedAt: 2026-04-15
 series: "泥の断章"

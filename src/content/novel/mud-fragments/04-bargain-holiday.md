@@ -1,5 +1,5 @@
 ---
-title: "泥の断章 #4 —— 特売品の休日、あるいは定着"
+title: "#4 特売品の休日、あるいは定着"
 chapterNumber: 13
 publishedAt: 2026-04-15
 series: "泥の断章"

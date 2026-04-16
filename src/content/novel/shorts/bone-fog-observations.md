@@ -1,5 +1,5 @@
 ---
-title: "短編 —— 都市骨霧観測録"
+title: "都市骨霧観測録"
 chapterNumber: 43
 publishedAt: 2026-04-15
 series: "短編"

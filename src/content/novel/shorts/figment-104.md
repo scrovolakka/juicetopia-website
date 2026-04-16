@@ -7,8 +7,6 @@ seriesOrder: 1
 summary: "第104番、欠片として再生する者のための一葉。"
 ---
 
-# 短編 104 ꜰɪɢᴍᴇɴᴛ
-
 GR+4｜都市・記録統治圏｜大坂州 玻璃脈街区
 
 §0 眠れない夜の輪郭
@@ -107,6 +105,7 @@ GR+4｜環境層：都市・記録統治圏｜大坂州 玻璃脈街区（Caffè
 
 カーソルが待つ。さっきまで灰色で表示されては消えていたサジェストが、再び現れる。彼女は充分な理解をしないまま、Tabキーを一度だけ押す。TODO のコメントアウトがひとつ、静かに書き変わる。
 
+```
 # lingua: en-core + domalon-nota
 
 UNO, O, QUAD = 1, 0, 4  # uno / o / quad — figmant rhythm
@@ -114,6 +113,7 @@ UNO, O, QUAD = 1, 0, 4  # uno / o / quad — figmant rhythm
 # TODO[UNO]:  map_shelves_infinite_corridor()    # mappa_scaffali_corridore_infinito — resolved
 > TODO[O]:    presence_attenuation_for_clover()  # attenuazione_presenza_per_clover
 # TODO[QUAD]: idle_breath_when_city_beats()      # fiato_inerte_quando_citta_batte
+```
 
 意味は、まだわからない。ただ、手が知っている。もうひとつの TODO にカーソルが移動して止まる。止まるだけで、今夜は充分だ。 ノイズは耳の内側で雨のまま、その一粒一粒が、小さな歯車となって鼓膜を回し始める。保存の動作音はしない。画面は静止画のように沈黙したまま、彼女のまぶたがゆっくり降りていく。
 
