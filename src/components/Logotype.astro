@@ -1,4 +1,7 @@
 ---
+import logoLight from '~/assets/logo_light.svg?url';
+import logoDark from '~/assets/logo_dark.svg?url';
+
 interface Props {
   size?: 'sm' | 'md' | 'lg' | 'hero';
   href?: string;
@@ -7,56 +10,64 @@ const { size = 'sm', href = import.meta.env.BASE_URL } = Astro.props;
 ---
 
 <a class:list={['logo', `size-${size}`]} href={href} aria-label="juicetopia — INDEX">
-  <span class="wordmark">ju<span class="dot">i</span>cetopia</span>
+  <img 
+    id="logo-light"
+    src={logoLight}
+    alt="juicetopia"
+    class="logo-image"
+  />
+  <img 
+    id="logo-dark"
+    src={logoDark}
+    alt="juicetopia"
+    class="logo-image"
+  />
 </a>
 
 <style>
   .logo {
     display: inline-flex;
-    align-items: baseline;
-    font-family: var(--font-display);
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    color: var(--color-ink);
+    align-items: center;
     line-height: 1;
-  }
-  .size-sm .wordmark {
-    font-size: 1.125rem;
-  }
-  .size-md .wordmark {
-    font-size: 1.5rem;
-  }
-  .size-lg .wordmark {
-    font-size: 2.25rem;
-  }
-  .size-hero .wordmark {
-    font-size: clamp(3rem, 10vw, 7rem);
-    letter-spacing: -0.015em;
-  }
-  .wordmark {
     position: relative;
   }
-  .dot {
-    position: relative;
-    color: var(--color-ink);
+
+  .logo-image {
+    width: 100%;
+    height: auto;
+    display: block;
   }
-  .dot::after {
-    content: '';
-    position: absolute;
-    top: -0.05em;
-    left: 50%;
-    width: 0.22em;
-    height: 0.22em;
-    border-radius: 50%;
-    background: var(--color-acid);
-    transform: translateX(-50%);
-    box-shadow: 0 0 0.25em var(--color-acid-dim);
+
+  .size-sm .logo-image {
+    height: 2rem;
   }
-  /* replace the normal i dot visually */
-  .size-sm .dot,
-  .size-md .dot,
-  .size-lg .dot,
-  .size-hero .dot {
-    /* keep normal glyph; acid dot sits above it */
+
+  .size-md .logo-image {
+    height: 3rem;
+  }
+
+  .size-lg .logo-image {
+    height: 4rem;
+  }
+
+  .size-hero .logo-image {
+    height: clamp(4rem, 12vw, 10rem);
+  }
+
+  /* Show the appropriate logo based on mode */
+  #logo-light {
+    display: block;
+  }
+
+  #logo-dark {
+    display: none;
+  }
+
+  :global([data-mode='void']) #logo-light {
+    display: none;
+  }
+
+  :global([data-mode='void']) #logo-dark {
+    display: block;
   }
 </style>
