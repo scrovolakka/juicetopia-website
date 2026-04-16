@@ -18,35 +18,42 @@
   const STORAGE_KEY = 'jct-writing-mode';
   const btn = document.getElementById('wm-toggle') as HTMLButtonElement | null;
   const article = document.querySelector('article.reading') as HTMLElement | null;
+  const scrollContainer = document.getElementById('body-scroll') as HTMLElement | null;
 
   if (btn && article) {
-    const isMobile = () => window.matchMedia('(max-width: 639px)').matches;
+    function scrollToStart() {
+      if (!scrollContainer) return;
+      // In vertical-rl, text starts at the right edge.
+      // After layout reflow, scroll to the rightmost position.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        });
+      });
+    }
 
-    function apply(mode: 'horizontal' | 'vertical') {
-      const effective = isMobile() ? 'horizontal' : mode;
-      article!.dataset.writing = effective;
-      btn!.dataset.active = String(effective === 'vertical');
-      btn!.setAttribute('aria-pressed', String(effective === 'vertical'));
+    function apply(mode: 'horizontal' | 'vertical', initial = false) {
+      article!.dataset.writing = mode;
+      btn!.dataset.active = String(mode === 'vertical');
+      btn!.setAttribute('aria-pressed', String(mode === 'vertical'));
+      const label = btn!.querySelector('.wm-label')!;
+      if (label) label.textContent = mode === 'vertical' ? 'YOKO' : 'TATE';
+
+      if (mode === 'vertical') {
+        scrollToStart();
+      } else if (!initial && scrollContainer) {
+        // When switching back to horizontal, reset scroll
+        scrollContainer.scrollLeft = 0;
+      }
     }
 
     const saved = localStorage.getItem(STORAGE_KEY);
-    apply(saved === 'vertical' ? 'vertical' : 'horizontal');
+    apply(saved === 'vertical' ? 'vertical' : 'horizontal', true);
 
     btn.addEventListener('click', () => {
       const next = article!.dataset.writing === 'vertical' ? 'horizontal' : 'vertical';
       localStorage.setItem(STORAGE_KEY, next);
       apply(next);
-    });
-
-    let resizeTimer: number;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
-        const stored = (localStorage.getItem(STORAGE_KEY) ?? 'horizontal') as
-          | 'horizontal'
-          | 'vertical';
-        apply(stored);
-      }, 150);
     });
   }
 </script>
@@ -85,9 +92,5 @@
     font-family: var(--font-mincho);
     font-size: 0.85em;
   }
-  @media (max-width: 639px) {
-    .wm-toggle {
-      display: none;
-    }
-  }
+  /* Mobile: keep toggle visible, vertical writing works on touch */
 </style>
