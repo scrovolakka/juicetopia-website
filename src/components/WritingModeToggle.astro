@@ -1,0 +1,93 @@
+---
+// Client-only toggle — no props needed.
+---
+
+<button
+  class="wm-toggle mono"
+  id="wm-toggle"
+  type="button"
+  aria-label="Toggle vertical writing mode"
+  aria-pressed="false"
+  title="縦書き切替"
+>
+  <span class="wm-icon" aria-hidden="true"></span>
+  <span class="wm-label">TATE</span>
+</button>
+
+<script>
+  const STORAGE_KEY = 'jct-writing-mode';
+  const btn = document.getElementById('wm-toggle') as HTMLButtonElement | null;
+  const article = document.querySelector('article.reading') as HTMLElement | null;
+
+  if (btn && article) {
+    const isMobile = () => window.matchMedia('(max-width: 639px)').matches;
+
+    function apply(mode: 'horizontal' | 'vertical') {
+      const effective = isMobile() ? 'horizontal' : mode;
+      article!.dataset.writing = effective;
+      btn!.dataset.active = String(effective === 'vertical');
+      btn!.setAttribute('aria-pressed', String(effective === 'vertical'));
+    }
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    apply(saved === 'vertical' ? 'vertical' : 'horizontal');
+
+    btn.addEventListener('click', () => {
+      const next = article!.dataset.writing === 'vertical' ? 'horizontal' : 'vertical';
+      localStorage.setItem(STORAGE_KEY, next);
+      apply(next);
+    });
+
+    let resizeTimer: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const stored = (localStorage.getItem(STORAGE_KEY) ?? 'horizontal') as
+          | 'horizontal'
+          | 'vertical';
+        apply(stored);
+      }, 150);
+    });
+  }
+</script>
+
+<style>
+  .wm-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    padding: 0.4em 0.6em;
+    border: 1px solid var(--color-rule);
+    border-radius: 0;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+    background: transparent;
+    line-height: 1;
+  }
+  .wm-toggle:hover,
+  .wm-toggle:focus-visible {
+    color: var(--color-ink);
+    border-color: var(--color-acid);
+  }
+  .wm-toggle[data-active='true'] {
+    color: var(--color-acid);
+    border-color: var(--color-acid);
+  }
+  .wm-icon::before {
+    content: '縦';
+    font-family: var(--font-mincho);
+    font-size: 0.85em;
+  }
+  @media (max-width: 639px) {
+    .wm-toggle {
+      display: none;
+    }
+  }
+</style>

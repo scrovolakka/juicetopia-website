@@ -77,6 +77,9 @@
   --max-reading: 40rem;
   --max-page: 72rem;
 
+  /* Heights */
+  --height-reading-v: clamp(70vh, 80vh, 85vh);
+
   /* Motion */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
