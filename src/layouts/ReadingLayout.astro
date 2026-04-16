@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import WritingModeToggle from '~/components/WritingModeToggle.astro';
 
 interface Props {
   title: string;
@@ -15,7 +16,7 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
 ---
 
 <BaseLayout title={title} mode="bone" showRouteIndex={false}>
-  <article class="reading">
+  <article class="reading" data-writing="horizontal">
     <aside class="rail mono" aria-hidden="true">
       <div>CH.{padded}</div>
       <div class="acid">/</div>
@@ -24,15 +25,20 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     </aside>
 
     <header class="head">
-      <p class="mono">[01 / NOVEL] · CH.{padded} / {totalPad}</p>
+      <div class="head-top">
+        <p class="mono">[01 / NOVEL] · CH.{padded} / {totalPad}</p>
+        <WritingModeToggle />
+      </div>
       <h1>{title}</h1>
       <p class="mono meta-dim">{dateStr} · TOKYO</p>
     </header>
 
     <div class="rule"></div>
 
-    <div class="body">
-      <slot />
+    <div class="body-scroll" id="body-scroll">
+      <div class="body">
+        <slot />
+      </div>
     </div>
 
     <div class="rule"></div>
@@ -40,6 +46,12 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     <slot name="nav" />
   </article>
 </BaseLayout>
+
+<script>
+  import { initVerticalScroll } from '~/scripts/vertical-scroll';
+  const el = document.getElementById('body-scroll');
+  if (el) initVerticalScroll(el);
+</script>
 
 <style>
   .reading {
@@ -68,8 +80,16 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
       display: none;
     }
   }
+
+  /* --- Header with toggle --- */
   .head {
     display: grid;
+    gap: var(--space-4);
+  }
+  .head-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: var(--space-4);
   }
   .head h1 {
@@ -79,6 +99,8 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     letter-spacing: 0.04em;
     line-height: 1.3;
   }
+
+  /* --- Body (horizontal mode — default) --- */
   .body {
     font-family: var(--font-mincho);
     font-size: var(--fs-reading);
@@ -96,5 +118,63 @@ const dateStr = publishedAt.toISOString().slice(0, 10).replace(/-/g, '.');
     .body {
       font-size: 1.125rem;
     }
+  }
+
+  /* --- Scroll container (no effect in horizontal) --- */
+  [data-writing='horizontal'] .body-scroll {
+    /* pass-through */
+  }
+
+  /* --- Vertical writing mode --- */
+  [data-writing='vertical'] .body-scroll {
+    height: var(--height-reading-v);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule-strong) transparent;
+    position: relative;
+  }
+
+  [data-writing='vertical'] .body {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    line-break: strict;
+    word-break: normal;
+    overflow-wrap: break-word;
+    height: 100%;
+    width: max-content;
+    padding-inline: var(--space-8);
+    padding-block: var(--space-4);
+  }
+
+  [data-writing='vertical'] .body :global(p) {
+    text-indent: 1em;
+    margin-block: 1.4em;
+  }
+
+  [data-writing='vertical'] .body :global(p:first-child) {
+    margin-top: 0;
+  }
+
+  /* Tate-chu-yoko — only active in vertical mode */
+  [data-writing='vertical'] .body :global(.tcy) {
+    text-combine-upright: all;
+    -webkit-text-combine: horizontal;
+  }
+
+  /* Scroll fade hint (left edge) */
+  [data-writing='vertical'] .body-scroll::after {
+    content: '';
+    position: sticky;
+    left: 0;
+    top: 0;
+    width: 2rem;
+    height: 100%;
+    background: linear-gradient(to right, var(--color-bg), transparent);
+    pointer-events: none;
+    display: block;
+    flex-shrink: 0;
   }
 </style>
