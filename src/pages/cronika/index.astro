@@ -56,7 +56,7 @@ const latestHero = entries.find((e) => e.entry.data.heroImage);
           const { Content } = rendered;
           const k = kindMap[entry.data.kind] ?? kindMap.note;
           return (
-            <li class="log-item" data-reveal>
+            <li class="log-item" id={entry.slug} data-reveal>
               <header class="log-head">
                 <div class="log-left">
                   <span class="log-id mono acid">{entry.data.entryId}</span>
@@ -136,6 +136,11 @@ const latestHero = entries.find((e) => e.entry.data.heroImage);
     gap: var(--space-4);
     padding-top: var(--space-8);
     border-top: 1px solid var(--color-acid-dim);
+    scroll-margin-top: 80px;
+  }
+  .log-item:target {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--color-acid);
   }
   .log-item:first-child {
     padding-top: 0;

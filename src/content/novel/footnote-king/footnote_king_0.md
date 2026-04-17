@@ -1,10 +1,10 @@
 ---
 title: "#0 搾り滓の王たち"
-chapterNumber: 28
+chapterNumber: 20
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 0
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "杯は善悪の秤ではなく、増殖の選別機である。"
 ---
 
 > 杯は善悪の秤ではない。増殖の選別機である。

@@ -1,10 +1,10 @@
 ---
 title: "#3 善良監督官"
-chapterNumber: 28
+chapterNumber: 23
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 3
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "善良とは、要約を暗記したまま本文を読まない姿勢のことである。"
 ---
 
 > 理解はしばしば、要約の長さに帰依する。

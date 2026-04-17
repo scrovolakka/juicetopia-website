@@ -1,10 +1,10 @@
 ---
 title: "#4 断罪の祭"
-chapterNumber: 28
+chapterNumber: 24
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 4
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "断罪は手続きで、祭は手続きに音楽を付け足す作法だ。"
 ---
 
 > 罪とは多くのとき、手続きの形である。

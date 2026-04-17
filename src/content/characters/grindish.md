@@ -1,9 +1,13 @@
 ---
 name: グラインディッシュ
-reading: ぐらいんでぃっしゅ
+reading: ぐらいんでぃっしゅ・ゔぇるでぃーの
 portrait: ../../assets/characters/003-portrait.svg
 charId: C.003
 order: 3
+faction: 主人公
+role: 工匠／緑の一族の復活者
+tagline: 壊す前に内部構造を見せる工匠。ジューストニウムの発見者で、現在は再起動された老人。
+era: 現代紀
 mondoRefs: [suktonium, suk-forna]
 leksikoRefs: [suktonium, suk-forna]
 ---

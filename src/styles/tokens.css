@@ -80,6 +80,15 @@
   /* Heights */
   --height-reading-v: clamp(70vh, 80vh, 85vh);
 
+  /* Authoring target for in-body figures in vertical writing mode.
+     Try `2 / 3` for a narrower / slimmer silhouette, or `4 / 5` for a
+     wider / card-like silhouette. Change here to re-tune the whole site. */
+  --fig-vertical-ratio: 2 / 3;
+  /* Height envelope of vertical-mode figures. Lower bound keeps the image
+     legible on short viewports; upper bound prevents it from dominating
+     the column on tall displays. */
+  --fig-vertical-height: clamp(260px, 58vh, 460px);
+
   /* Motion */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-in: cubic-bezier(0.64, 0, 0.78, 0);

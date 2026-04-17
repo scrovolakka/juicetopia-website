@@ -41,12 +41,24 @@ const characters = defineCollection({
     z.object({
       name: z.string(),
       reading: z.string().optional(),
-      portrait: image(),
+      // Portrait becomes optional so we can stub in characters before art exists.
+      portrait: image().optional(),
       charId: z.string(),
       order: z.number().int().default(0),
-      // Optional: cross-refs to codex concepts and lexicon terms for auto-linking
+      // Faction / clan grouping — drives the list page sections.
+      // Examples: 主人公 / 王のフルーツ / 導管民 / 緑の一族 / ドマロンの道具たち /
+      // ミューズ / 大坂 / 修繕班 / くまちゃん読書会 / 脚注の王 / 異形
+      faction: z.string().default('その他'),
+      // Role / short title within the faction (e.g. 「古代の王リーダー」「触媒」).
+      role: z.string().optional(),
+      // One-line descriptor used on the list card. Keep short (~60 chars).
+      tagline: z.string().optional(),
+      // Era: 古代 / 沈黙紀 / 再生紀 / 現代紀 / 遺跡の時代 — optional
+      era: z.string().optional(),
+      // Cross-refs — the detail page renders these as structured links.
       mondoRefs: z.array(z.string()).default([]),
       leksikoRefs: z.array(z.string()).default([]),
+      novelRefs: z.array(z.string()).default([]), // slugs into the novel collection
     }),
 });
 

@@ -190,6 +190,107 @@ ruby rp {
 }
 
 /* ============================================================
+   Immersion mode — triggered by html[data-reading='immersion']
+   (set by WritingModeToggle when the reader enters vertical mode).
+   Collapses site chrome so the reading column dominates. Exit via
+   the TATE/YOKO button or Escape.
+   ============================================================ */
+html[data-reading='immersion'] .site-header .bar {
+  grid-template-columns: auto 1fr auto;
+  padding-block: 0.35rem;
+  min-height: 0;
+}
+html[data-reading='immersion'] .site-header .nav,
+html[data-reading='immersion'] .site-header .right,
+html[data-reading='immersion'] .site-header .burger,
+html[data-reading='immersion'] .site-header .drawer {
+  display: none;
+}
+html[data-reading='immersion'] .site-header .rule {
+  display: none;
+}
+/* Compact logo — scale the left wordmark down when the header collapses. */
+html[data-reading='immersion'] .site-header .logo .logo-image {
+  height: 18px;
+}
+
+html[data-reading='immersion'] .site-footer {
+  display: none;
+}
+
+/* Reduce page padding so the body column sits close to the viewport edges. */
+html[data-reading='immersion'] .page {
+  padding-block: var(--space-2) var(--space-2);
+  padding-inline: clamp(0.5rem, 1.5vw, 1.25rem);
+}
+/* The route-head (above the article) is redundant in immersion — hide it. */
+html[data-reading='immersion'] .route-head {
+  display: none;
+}
+
+/* --- Reading article in immersion mode ---------------------------------- */
+
+/* Full-bleed frame — the scroll column uses the whole viewport. */
+article.reading[data-writing='vertical'] {
+  max-width: none;
+  width: 100%;
+  gap: var(--space-8);
+}
+
+/* Children except the body-scroll revert to the reading column width so the
+   title, chapter-nav, etc. stay tight and centred. */
+article.reading[data-writing='vertical'] > .head,
+article.reading[data-writing='vertical'] > .ch-nav {
+  max-width: var(--max-reading);
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* Head layout — shrink, keep only the TATE toggle row. */
+article.reading[data-writing='vertical'] .head {
+  gap: var(--space-2);
+}
+article.reading[data-writing='vertical'] .head-top {
+  justify-content: flex-end;
+}
+
+/* Hide chrome the reader doesn't need while immersed. */
+article.reading[data-writing='vertical'] .rail,
+article.reading[data-writing='vertical'] .chapter-hero,
+article.reading[data-writing='vertical'] .chapter-watermark,
+article.reading[data-writing='vertical'] .head-top > p.mono,
+article.reading[data-writing='vertical'] .head > p.meta-dim,
+article.reading[data-writing='vertical'] .scroll-anchor,
+article.reading[data-writing='vertical'] > .rule {
+  display: none;
+}
+
+/* Body headings inside reading articles — unify to mincho so ## / ###
+   in markdown (sections like 「印」「紙」「歯車」) match the prose voice
+   instead of inheriting the site-wide sans h2/h3. */
+.reading .body h1,
+.reading .body h2,
+.reading .body h3,
+.reading .body h4 {
+  font-family: var(--font-mincho);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+.reading .body h2 {
+  font-size: 1.25rem;
+  margin-block: 2em 0.8em;
+}
+.reading .body h3 {
+  font-size: 1.125rem;
+  margin-block: 1.8em 0.6em;
+}
+.reading .body h4 {
+  font-size: 1rem;
+  margin-block: 1.5em 0.5em;
+}
+
+/* ============================================================
    Body figures — inline images inside article bodies.
    - Plain `![alt](./img.png)` renders at natural ratio, constrained
      to 100% width with a subtle frame.
@@ -243,9 +344,51 @@ ruby rp {
   text-transform: none;
 }
 
-/* In vertical writing mode, figures stay in horizontal flow like code blocks */
+/* ============================================================
+   Vertical writing mode — "picture page" approach.
+   The figure fills the scroll column height and is cropped to a
+   fixed portrait ratio (--fig-vertical-ratio, default 3:4). The
+   tagged ratio ([16:9], [4:3] etc.) only affects horizontal mode;
+   in vertical mode every figure is unified to the vertical ratio.
+   Authoring guideline: prepare images at --fig-vertical-ratio so
+   they aren't cropped here either.
+   ============================================================ */
 [data-writing='vertical'] .body .fig,
 [data-writing='vertical'] .body p > img {
   writing-mode: horizontal-tb;
   text-orientation: initial;
+}
+
+[data-writing='vertical'] .body .fig {
+  display: inline-block;
+  vertical-align: top;
+  margin-block: 0;
+  margin-inline: var(--space-4);
+}
+/* Override the tag-derived aspect — vertical mode forces the
+   site-wide vertical ratio so every figure becomes "one column" of
+   horizontal scroll. */
+[data-writing='vertical'] .body .fig .fig-frame {
+  height: var(--fig-vertical-height);
+  width: auto;
+  max-width: none;
+  aspect-ratio: var(--fig-vertical-ratio);
+}
+[data-writing='vertical'] .body .fig figcaption {
+  max-width: 22em;
+  margin-top: var(--space-2);
+}
+
+/* Plain (no ratio tag) images in vertical mode — same picture-page
+   treatment. object-fit: cover crops to the vertical ratio. */
+[data-writing='vertical'] .body p > img {
+  display: inline-block;
+  vertical-align: top;
+  height: var(--fig-vertical-height);
+  width: auto;
+  max-width: none;
+  margin-block: 0;
+  margin-inline: var(--space-4);
+  aspect-ratio: var(--fig-vertical-ratio);
+  object-fit: cover;
 }

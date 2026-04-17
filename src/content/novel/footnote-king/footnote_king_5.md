@@ -1,10 +1,10 @@
 ---
 title: "#5 脚注機関"
-chapterNumber: 28
+chapterNumber: 26
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 6
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "跪いていることに気づかない姿勢が、もっとも安定した姿勢である。"
 ---
 
 > 冠が消え、脚注と礼だけが残るとき、人は跪いていることに気づかない。

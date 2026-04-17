@@ -1,10 +1,10 @@
 ---
 title: "#2 奇跡の夜"
-chapterNumber: 28
+chapterNumber: 22
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 2
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "奇跡は一夜で閉じ、兆しだけが朝を越えて残る。"
 ---
 
 > 善は証明を要す。悪は兆しで足りる。

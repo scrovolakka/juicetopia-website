@@ -1,10 +1,10 @@
 ---
 title: "#6 糸が絡む夜"
-chapterNumber: 28
+chapterNumber: 27
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 7
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "芸とは、操られうる余白を先に見つけることである。"
 ---
 
 > 支配の芸は、操ることより、操られうる余白を読むことに尽きる。

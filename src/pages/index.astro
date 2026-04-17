@@ -13,13 +13,16 @@ const links = [
   { id: '05', label: 'LEKSIKO', href: `${base}/lexicon/`, jp: '辞書' },
 ];
 
-// "Now" strip data — compute the most recent entries across collections.
-const [novel, gallery, characters, codex, lexicon] = await Promise.all([
+// "Now" strip data — every piece below is computed at build time from the
+// content collections. No manual bookkeeping: each deploy re-reads the
+// filesystem, picks the freshest dated entries, and updates the stamp.
+const [novel, gallery, characters, codex, lexicon, cronika] = await Promise.all([
   getCollection('novel'),
   getCollection('gallery'),
   getCollection('characters'),
   getCollection('codex'),
   getCollection('lexicon'),
+  getCollection('cronika'),
 ]);
 
 const latestChapter = novel
@@ -28,6 +31,9 @@ const latestChapter = novel
 const latestImage = gallery
   .slice()
   .sort((a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime())[0];
+const latestCronika = cronika
+  .slice()
+  .sort((a, b) => b.data.loggedAt.getTime() - a.data.loggedAt.getTime())[0];
 
 // Pick a "random" lexicon term using a deterministic rotation based on build day
 // (so the same page render shows the same term, but it changes daily in CI).
@@ -37,11 +43,21 @@ const lexPick = lexicon[day % lexicon.length];
 const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '.');
 const pad = (n: number) => String(n).padStart(2, '0');
 
+// "Last update" pulls from every dated collection so any addition — a chapter,
+// an image, or an editor's log entry — bumps the stamp.
 const lastUpdateDate = [
   latestChapter?.data.publishedAt,
   latestImage?.data.createdAt,
+  latestCronika?.data.loggedAt,
 ].filter(Boolean).sort((a: any, b: any) => b.getTime() - a.getTime())[0] as Date | undefined;
 const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
+
+const kindLabel: Record<string, string> = {
+  add: '追加',
+  fix: '修繕',
+  note: '手記',
+  release: '公刊',
+};
 
 const stats = [
   { k: 'LEYDA', n: novel.length, jp: '章' },
@@ -130,6 +146,20 @@ const stats = [
               {fmt(latestImage.data.createdAt)}
               <span class="sep">·</span>
               <span>{latestImage.data.medium}</span>
+            </span>
+          </a>
+        )}
+
+        {latestCronika && (
+          <a class="now-cell" href={`${base}/cronika/#${latestCronika.slug}`}>
+            <span class="now-k mono">
+              <span class="acid">·</span> CRONIKA · {kindLabel[latestCronika.data.kind] ?? '手記'}
+            </span>
+            <span class="now-jp">{latestCronika.data.title}</span>
+            <span class="now-meta mono meta-dim">
+              {fmt(latestCronika.data.loggedAt)}
+              <span class="sep">·</span>
+              <span>{latestCronika.data.entryId}</span>
             </span>
           </a>
         )}
@@ -332,12 +362,14 @@ const stats = [
 
   .now-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* auto-fit so the strip gracefully adapts to 3 or 4 cells (or more,
+       if future cells are added). Min cell width keeps text readable. */
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1px;
     background: var(--color-rule);
     border: 1px solid var(--color-rule);
   }
-  @media (max-width: 64rem) {
+  @media (max-width: 48rem) {
     .now-grid {
       grid-template-columns: 1fr;
     }

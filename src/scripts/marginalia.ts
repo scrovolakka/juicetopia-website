@@ -93,6 +93,16 @@ function layoutSidenotes(article: HTMLElement, pairs: Pair[]) {
     const h = aside.offsetHeight;
     lastBottom = y + h;
   });
+
+  // Ensure the scroll container is tall enough to contain the last note so
+  // downstream chrome (chapter nav, page footer) flows below it instead of
+  // being overrun. In 脚注の王 especially, notes routinely outgrow the body —
+  // that's the whole point of the story; the layout should honour it.
+  const scroll = body.parentElement as HTMLElement | null;
+  if (scroll && Number.isFinite(lastBottom) && lastBottom > 0) {
+    const padding = 48;
+    scroll.style.minHeight = `${Math.ceil(lastBottom + padding)}px`;
+  }
 }
 
 function enhanceRefs(article: HTMLElement, pairs: Pair[]) {
@@ -105,6 +115,10 @@ function teardown(article: HTMLElement) {
   article
     .querySelectorAll<HTMLElement>('.sidenote, .sidenote-col')
     .forEach((el) => el.remove());
+  // Release the min-height applied by layoutSidenotes so the scroll container
+  // shrinks back to the natural body height.
+  const scroll = article.querySelector<HTMLElement>('.body-scroll');
+  if (scroll) scroll.style.minHeight = '';
 }
 
 function init() {
@@ -121,7 +135,8 @@ function init() {
   const media = matchMedia(WIDE_QUERY);
 
   const apply = () => {
-    if (media.matches) {
+    const isVertical = article.dataset.writing === 'vertical';
+    if (media.matches && !isVertical) {
       layoutSidenotes(article, pairs);
     } else {
       teardown(article);

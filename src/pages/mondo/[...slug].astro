@@ -122,7 +122,7 @@ const relatedChars = characters.filter((c) => (c.data.mondoRefs ?? []).includes(
               <ul class="ref-list">
                 {relatedChars.map((c) => (
                   <li>
-                    <a class="ref-link" href={`${base}/characters/#${c.data.charId}`}>
+                    <a class="ref-link" href={`${base}/characters/${c.slug}/`}>
                       <span class="mono acid">{c.data.charId}</span>
                       <span class="jp">{c.data.name}</span>
                     </a>

@@ -145,6 +145,8 @@ const marginalia = seriesSlug === 'footnote-king' ? 'on' : 'off';
     gap: var(--space-8);
     position: relative;
   }
+  /* Vertical mode immersion rules live in src/styles/base.css so they can
+     reach slot-provided children (ChapterNav) without Astro scoping. */
   .rail {
     position: absolute;
     left: calc(var(--max-reading) * -0.22);

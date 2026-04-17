@@ -3,7 +3,11 @@ name: メランズブラ
 reading: めらんずぶら
 portrait: ../../assets/characters/006-portrait.svg
 charId: C.006
-order: 6
+order: 1
+faction: 王のフルーツ
+role: 古代の王／初代ジューサー
+tagline: 世界内では「フルーツ族のメロン」と記録される、初代の搾る者。
+era: 古代
 mondoRefs: [sacrabolla, zuk-sha, suk-forna]
 leksikoRefs: [sacrabolla, zuk-sha]
 ---

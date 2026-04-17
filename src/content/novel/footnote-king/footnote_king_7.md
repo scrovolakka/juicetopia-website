@@ -4,7 +4,7 @@ chapterNumber: 28
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 8
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "削除された視線は、数の内にも外にも置かれない。"
 ---
 
 > 正義は本文を求める。杯は脚注の数を求める。

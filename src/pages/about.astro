@@ -1,11 +1,31 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Pull the three most recent editor's log entries for the CRONIKA digest.
+// Full history stays on /cronika/; this page shows a compact summary so the
+// reader can see recent meta-commentary at a glance.
+const allCronika = await getCollection('cronika');
+const recentLog = allCronika
+  .slice()
+  .sort((a, b) => b.data.loggedAt.getTime() - a.data.loggedAt.getTime())
+  .slice(0, 3);
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '.');
+const kindLabel: Record<string, { en: string; jp: string }> = {
+  add: { en: 'ADD', jp: '追加' },
+  fix: { en: 'FIX', jp: '修繕' },
+  note: { en: 'NOTE', jp: '手記' },
+  release: { en: 'REL', jp: '公刊' },
+};
 ---
 
 <BaseLayout title="NOTA" description="juicetopia — nota-di pana.">
   <article class="about page-column">
     <header class="about-head" data-reveal>
-      <h1 class="about-title">NOTA<br /><span class="jp">について</span></h1>
+      <h1 class="about-title">NOTA<br /><span class="jp">Juicetpiaについて</span></h1>
       <p class="mono">[04 / NOTA] · NOTA-DI NORMA · A.02</p>
     </header>
 
@@ -25,37 +45,40 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
         サイト全体に走る走査線とグレインは、古い映像機器の記録であることを示すためのものです。電源は切っていません。
       </p>
       <p>
-        世界の固有名詞は、以下の <span class="mono meta-dim">MONDO-DI NOTA</span> にいくらか置いています。通読の必要はありません。本文を読むためにも、注釈を読むためにも。
+        世界の固有名詞と語彙は、別項の <a class="acid-link" href={`${base}/mondo/`}>MONDO-DI NOTA</a> と <a class="acid-link" href={`${base}/lexicon/`}>LEKSIKO</a> に置いています。通読の必要はありません。本文を読むためにも、注釈を読むためにも。
       </p>
     </section>
 
     <div class="rule"></div>
 
-    <section class="about-codex flow" data-reveal>
+    <section class="about-log flow" data-reveal>
       <h2>
-        <a class="codex-jump" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/`}
-          >MONDO-DI NOTA</a
-        >
-        <span class="jp-sub">—— 世界注（→ <a class="codex-jump" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/`}>全項</a>）</span>
+        <a class="codex-jump" href={`${base}/cronika/`}>CRONIKA</a>
+        <span class="jp-sub">—— 編集後記の最新 3 件（→ <a class="codex-jump" href={`${base}/cronika/`}>全履歴</a>）</span>
       </h2>
-      <dl class="mono">
-        {[
-          { slug: 'sacrabolla', jp: '聖杯', label: 'SACRABOLLA', body: '情報の器。古い容器として記述され、しばしば器のない器として機能する。' },
-          { slug: 'komanda', jp: '命令詩', label: 'KOMANDA', body: '空気を震わせるのではなく、定義を書き換える言葉。発声者は多く、読解者は少ない。' },
-          { slug: 'suk-forna', jp: '果汁化', label: 'SUK-FORNA', body: '記憶・経験・存在を流動資源へと圧搾する手続き。残渣は、ときに記憶として拾われる。' },
-          { slug: 'suktonium', jp: 'ジューストニウム', label: 'SUKTONIUM', body: '結晶化された果汁。採掘可能、可搬、爆発的。時代を一度ずらした物質。' },
-          { slug: 'nota-di-dol', jp: '脚注王制', label: 'NOTA-DI DOL', body: '本文ではなく注釈によって世界を統治する体制。法は増殖し、本文は読みにくくなる。' },
-          { slug: 'zuk-sha', jp: 'ジューサー', label: 'ZUK-SHA', body: '搾る者。聖杯との古い契約を世代ごとに引き継ぐ家系。稀に、契約から降りる者がいる。' },
-        ].map((c) => {
-          const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/${c.slug}/`;
+      <ul class="log-digest">
+        {recentLog.map((e) => {
+          const k = kindLabel[e.data.kind] ?? kindLabel.note;
           return (
-            <div>
-              <dt><a class="codex-jump" href={href}>{c.jp}</a></dt>
-              <dd>{c.body}<span class="meta-dim">{c.label}</span></dd>
-            </div>
+            <li>
+              <a class="log-link" href={`${base}/cronika/#${e.slug}`}>
+                <span class="log-meta mono">
+                  <span class="acid">{e.data.entryId}</span>
+                  <span class={`log-kind kind-${e.data.kind}`}>
+                    <span class="kind-en">{k.en}</span>
+                    <span class="kind-jp">{k.jp}</span>
+                  </span>
+                  <span class="log-date meta-dim">{fmt(e.data.loggedAt)}</span>
+                </span>
+                <span class="log-title">{e.data.title}</span>
+              </a>
+            </li>
           );
         })}
-      </dl>
+      </ul>
+      <p class="log-more mono">
+        <a class="codex-jump" href={`${base}/cronika/`}>→ 全編集後記は CRONIKA へ</a>
+      </p>
     </section>
 
     <div class="rule"></div>
@@ -102,7 +125,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     letter-spacing: var(--ls-reading);
     max-width: var(--max-reading);
   }
-  .about-codex h2,
+  .about-log h2,
   .about-credits h2 {
     font-family: var(--font-mono);
     font-size: var(--fs-meta);
@@ -110,7 +133,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     color: var(--color-ink-muted);
     text-transform: uppercase;
   }
-  .about-codex h2 .jp-sub {
+  .about-log h2 .jp-sub {
     font-family: var(--font-mincho);
     font-size: 0.9em;
     letter-spacing: 0.2em;
@@ -118,12 +141,76 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     text-transform: none;
     margin-left: 0.5em;
   }
-  .about-codex dl,
+
+  /* --- CRONIKA digest (最新 3 件) --- */
+  .log-digest {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+  }
+  .log-digest li {
+    border-top: 1px solid var(--color-rule);
+  }
+  .log-digest li:last-child {
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .log-link {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .log-link:hover,
+  .log-link:focus-visible {
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-acid) 8%);
+  }
+  .log-meta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6em;
+    flex-wrap: wrap;
+    font-size: var(--fs-meta);
+    letter-spacing: 0.14em;
+  }
+  .log-meta .acid {
+    color: var(--color-acid);
+  }
+  .log-kind {
+    display: inline-flex;
+    gap: 0.4em;
+    padding: 0.1em 0.5em;
+    border: 1px solid var(--color-rule-strong);
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+  }
+  .kind-jp {
+    font-family: var(--font-mincho);
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+  }
+  .kind-add { border-color: var(--color-acid); }
+  .kind-release { border-color: color-mix(in srgb, var(--color-acid) 55%, black); }
+  .kind-fix { border-color: #c0331a; }
+  .kind-note { border-color: var(--color-rule-strong); }
+
+  .log-title {
+    font-family: var(--font-mincho);
+    font-size: 1.125rem;
+    letter-spacing: 0.03em;
+    color: var(--color-ink);
+  }
+  .log-more {
+    padding-top: var(--space-3);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.14em;
+  }
+
+  /* --- Credits --- */
   .about-credits dl {
     display: grid;
     gap: var(--space-3);
   }
-  .about-codex dl > div,
   .about-credits dl > div {
     display: grid;
     grid-template-columns: 10rem 1fr;
@@ -131,40 +218,15 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     border-top: 1px solid var(--color-rule);
     padding-top: var(--space-3);
   }
-  .about-codex dt,
   .about-credits dt {
     color: var(--color-ink-muted);
-    font-family: var(--font-mincho);
-    letter-spacing: 0.12em;
-    transition: color var(--dur-fast) var(--ease-out);
-    border-bottom: 1px solid transparent;
-  }
-  .about-codex dl > div:hover dt {
-    border-bottom-color: var(--color-acid);
-  }
-  .about-credits dt {
     font-family: var(--font-mono);
     letter-spacing: var(--ls-meta);
   }
-  .about-codex dd,
   .about-credits dd {
     color: var(--color-ink);
-    transition: color var(--dur-fast) var(--ease-out);
   }
-  .about-codex dl > div:hover dd {
-    color: color-mix(in srgb, var(--color-ink) 100%, white 15%);
-  }
-  .about-codex dd {
-    font-family: var(--font-mincho);
-    line-height: var(--lh-reading);
-  }
-  .about-codex dd .meta-dim {
-    display: inline-block;
-    margin-left: 0.75em;
-    font-family: var(--font-mono);
-    font-size: var(--fs-meta);
-    letter-spacing: var(--ls-meta);
-  }
+
   .codex-jump {
     border-bottom: 1px solid transparent;
     transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
@@ -175,7 +237,6 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     color: var(--color-acid);
   }
   @media (max-width: 40rem) {
-    .about-codex dl > div,
     .about-credits dl > div {
       grid-template-columns: 1fr;
       gap: var(--space-1);

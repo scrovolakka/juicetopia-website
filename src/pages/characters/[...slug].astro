@@ -1,0 +1,407 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+
+export async function getStaticPaths() {
+  const all = await getCollection('characters');
+  return all.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'characters'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Resolve cross-references. Ignore broken slugs silently — the detail page
+// should still render even when a referenced entry hasn't been authored yet.
+const mondo = (
+  await Promise.all(
+    (entry.data.mondoRefs ?? []).map((slug) => getEntry('codex', slug).catch(() => null)),
+  )
+).filter(Boolean) as Array<CollectionEntry<'codex'>>;
+
+const leksiko = (
+  await Promise.all(
+    (entry.data.leksikoRefs ?? []).map((slug) => getEntry('lexicon', slug).catch(() => null)),
+  )
+).filter(Boolean) as Array<CollectionEntry<'lexicon'>>;
+
+const novels = (
+  await Promise.all(
+    (entry.data.novelRefs ?? []).map((slug) => getEntry('novel', slug).catch(() => null)),
+  )
+).filter(Boolean) as Array<CollectionEntry<'novel'>>;
+
+// Collect "siblings" — other characters in the same faction — for a small
+// footer bar that lets readers hop between faction mates.
+const all = await getCollection('characters');
+const siblings = all
+  .filter((c) => c.data.faction === entry.data.faction && c.slug !== entry.slug)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<BaseLayout
+  title={entry.data.name}
+  description={entry.data.tagline}
+  mode="bone"
+  ogImage={entry.data.portrait}
+  ogImageAlt={entry.data.name}
+>
+  <article class="char-detail page-column" data-reveal>
+    <header class="head">
+      <p class="meta mono">
+        <span class="acid">{entry.data.charId}</span>
+        <span class="sep">·</span>
+        <span>{entry.data.faction}</span>
+        {entry.data.era && (
+          <>
+            <span class="sep">·</span>
+            <span>{entry.data.era}</span>
+          </>
+        )}
+      </p>
+      <h1 class="title">
+        <span class="jp-name">{entry.data.name}</span>
+        {entry.data.reading && <span class="reading mono">{entry.data.reading}</span>}
+      </h1>
+      {entry.data.role && <p class="role mono">{entry.data.role}</p>}
+      {entry.data.tagline && <p class="tagline">{entry.data.tagline}</p>}
+    </header>
+
+    <div class="layout">
+      <aside class="portrait-col">
+        <div class="portrait">
+          {entry.data.portrait ? (
+            <Image
+              src={entry.data.portrait}
+              alt={entry.data.name}
+              widths={[320, 640]}
+              sizes="(min-width: 64rem) 320px, 60vw"
+            />
+          ) : (
+            <span class="portrait-placeholder mono">{entry.data.charId}</span>
+          )}
+        </div>
+      </aside>
+
+      <div class="body">
+        <Content />
+      </div>
+    </div>
+
+    {(mondo.length > 0 || leksiko.length > 0 || novels.length > 0) && (
+      <>
+        <div class="rule"></div>
+        <aside class="refs flow-8" data-reveal>
+          <h2 class="refs-head mono">REFS</h2>
+
+          {novels.length > 0 && (
+            <section class="ref-block">
+              <h3 class="ref-title mono meta-dim">LEYDA · 登場章</h3>
+              <ul class="ref-list">
+                {novels.map((n) => {
+                  const date = n.data.publishedAt
+                    .toISOString()
+                    .slice(0, 10)
+                    .replace(/-/g, '.');
+                  return (
+                    <li>
+                      <a class="ref-link" href={`${base}/novel/${n.slug}/`}>
+                        <span class="mono acid">ST.{pad(n.data.chapterNumber)}</span>
+                        <span class="jp">{n.data.title}</span>
+                        <span class="ref-date mono meta-dim">{date}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {mondo.length > 0 && (
+            <section class="ref-block">
+              <h3 class="ref-title mono meta-dim">MONDO · 世界注</h3>
+              <ul class="ref-list">
+                {mondo.map((m) => (
+                  <li>
+                    <a class="ref-link" href={`${base}/mondo/${m.slug}/`}>
+                      <span class="mono acid">{m.data.codexId}</span>
+                      <span class="jp">{m.data.title}</span>
+                      <span class="ref-label mono meta-dim">{m.data.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {leksiko.length > 0 && (
+            <section class="ref-block">
+              <h3 class="ref-title mono meta-dim">LEKSIKO · 語</h3>
+              <ul class="ref-list">
+                {leksiko.map((l) => (
+                  <li>
+                    <a class="ref-link" href={`${base}/lexicon/#${l.slug}`}>
+                      <span class="mono acid">{l.data.word}</span>
+                      <span class="jp">{l.data.gloss}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </>
+    )}
+
+    <div class="rule"></div>
+
+    {siblings.length > 0 && (
+      <nav class="siblings" aria-label={`Other members of ${entry.data.faction}`}>
+        <p class="siblings-label mono meta-dim">
+          {entry.data.faction} · {pad(siblings.length + 1)} FAKTA
+        </p>
+        <ul>
+          {siblings.map((s) => (
+            <li>
+              <a class="sib-link" href={`${base}/characters/${s.slug}/`}>
+                <span class="mono acid">{s.data.charId}</span>
+                <span class="jp-name">{s.data.name}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <nav class="entry-nav mono">
+      <a href={`${base}/characters/`}>← INDEX · 登場人物</a>
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .char-detail {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--max-reading);
+  }
+  .meta .sep {
+    margin-inline: 0.4em;
+    color: var(--color-acid);
+  }
+  .title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.95;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .title .jp-name {
+    font-family: var(--font-mincho);
+    font-size: clamp(2.25rem, 6vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .title .reading {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+  }
+  .role {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.18em;
+    color: var(--color-acid);
+  }
+  .tagline {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    color: var(--color-ink-muted);
+    line-height: var(--lh-reading);
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--color-acid);
+    max-width: 50ch;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: var(--space-12);
+    align-items: start;
+  }
+  @media (max-width: 60rem) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+  }
+  .portrait-col {
+    position: sticky;
+    top: 6rem;
+  }
+  @media (max-width: 60rem) {
+    .portrait-col {
+      position: static;
+    }
+  }
+  .portrait {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+    display: grid;
+    place-items: center;
+  }
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .portrait-placeholder {
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+    padding: 0.5em 0.75em;
+    border: 1px solid var(--color-rule);
+  }
+
+  .body {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    letter-spacing: var(--ls-reading);
+    max-width: 42rem;
+  }
+  .body :global(p) {
+    margin-block: 1.3em;
+  }
+  .body :global(p:first-child) {
+    margin-top: 0;
+  }
+  .body :global(h2) {
+    font-family: var(--font-mincho);
+    font-weight: 500;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    margin-block: 2em 0.8em;
+  }
+  .body :global(h3) {
+    font-family: var(--font-mincho);
+    font-weight: 500;
+    font-size: 1.0625rem;
+    letter-spacing: 0.04em;
+    margin-block: 1.6em 0.6em;
+  }
+  .body :global(hr) {
+    border: none;
+    text-align: center;
+    margin-block: 2em;
+  }
+  .body :global(hr)::after {
+    content: '· · ·';
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.5em;
+    color: var(--color-ink-muted);
+  }
+
+  .refs {
+    max-width: var(--max-reading);
+  }
+  .refs-head {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.18em;
+    color: var(--color-ink-muted);
+  }
+  .ref-block + .ref-block {
+    margin-top: var(--space-4);
+  }
+  .ref-title {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.14em;
+    margin-bottom: var(--space-2);
+  }
+  .ref-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .ref-link {
+    display: inline-flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .ref-link:hover {
+    border-bottom-color: var(--color-acid);
+  }
+  .ref-link .jp {
+    font-family: var(--font-mincho);
+  }
+  .ref-label,
+  .ref-date {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+  }
+
+  .siblings {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .siblings-label {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.14em;
+  }
+  .siblings ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .sib-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .sib-link:hover {
+    border-bottom-color: var(--color-acid);
+  }
+  .sib-link .jp-name {
+    font-family: var(--font-mincho);
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+  .entry-nav a {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+  }
+  .entry-nav a:hover {
+    color: var(--color-acid);
+  }
+</style>

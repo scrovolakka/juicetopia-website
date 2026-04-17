@@ -39,21 +39,37 @@
       const label = btn!.querySelector('.wm-label')!;
       if (label) label.textContent = mode === 'vertical' ? 'YOKO' : 'TATE';
 
+      // Global immersion flag — header/footer/page padding collapse when set
       if (mode === 'vertical') {
+        document.documentElement.dataset.reading = 'immersion';
         scrollToStart();
-      } else if (!initial && scrollContainer) {
-        // When switching back to horizontal, reset scroll
-        scrollContainer.scrollLeft = 0;
+      } else {
+        delete document.documentElement.dataset.reading;
+        if (!initial && scrollContainer) {
+          // When switching back to horizontal, reset scroll
+          scrollContainer.scrollLeft = 0;
+        }
       }
+    }
+
+    function toggleWriting(next?: 'horizontal' | 'vertical') {
+      const target =
+        next ?? (article!.dataset.writing === 'vertical' ? 'horizontal' : 'vertical');
+      localStorage.setItem(STORAGE_KEY, target);
+      apply(target);
     }
 
     const saved = localStorage.getItem(STORAGE_KEY);
     apply(saved === 'vertical' ? 'vertical' : 'horizontal', true);
 
-    btn.addEventListener('click', () => {
-      const next = article!.dataset.writing === 'vertical' ? 'horizontal' : 'vertical';
-      localStorage.setItem(STORAGE_KEY, next);
-      apply(next);
+    btn.addEventListener('click', () => toggleWriting());
+
+    // Esc exits immersion (returns to horizontal / yokogaki)
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (article!.dataset.writing !== 'vertical') return;
+      ev.preventDefault();
+      toggleWriting('horizontal');
     });
   }
 </script>

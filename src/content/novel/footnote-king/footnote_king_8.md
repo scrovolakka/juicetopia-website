@@ -1,10 +1,10 @@
 ---
 title: "#8 座り方"
-chapterNumber: 28
+chapterNumber: 29
 publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 9
-summary: "正しい座り方は、立ち上がれない時間の長さで測られる。"
+summary: "本文のない章は、脚注の数で座り方を決める。"
 ---
 
 > [^0]

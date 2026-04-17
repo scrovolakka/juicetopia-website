@@ -91,7 +91,7 @@ export function initHero(canvas: HTMLCanvasElement) {
     color: 0xefebe2,
     wireframe: true,
     transparent: true,
-    opacity: 0.92,
+    opacity: 0.52,
     side: THREE.DoubleSide,
   });
   const chalice = new THREE.Mesh(chaliceGeom, chaliceMat);
@@ -125,6 +125,98 @@ export function initHero(canvas: HTMLCanvasElement) {
   });
   const particles = new THREE.Points(particleGeom, particleMat);
   chalice.add(particles);
+
+  // ------------------------------------------------------------------------
+  // Polygon glitch — snapshot the pristine vertex positions so we can perturb
+  // them briefly and restore. Two flavours of glitch are scheduled randomly:
+  //   · 'jitter' — every vertex displaced by small noise for ~200ms (signal
+  //     static on the surface)
+  //   · 'shear'  — a horizontal band of vertices slides in X for a few frames
+  //     (scanline tear / tape dropout)
+  // Both are disabled under prefers-reduced-motion.
+  // ------------------------------------------------------------------------
+  const chaliceOrig = new Float32Array(
+    (positions.array as Float32Array).length,
+  );
+  chaliceOrig.set(positions.array as Float32Array);
+  const particlesOrig = new Float32Array(particlePositions.length);
+  particlesOrig.set(particlePositions);
+
+  type GlitchKind = 'off' | 'jitter' | 'shear';
+  let glitchKind: GlitchKind = 'off';
+  let glitchUntil = 0;
+  let glitchShearY = 0;
+  let glitchShearBand = 0;
+  let glitchShearDx = 0;
+  let nextGlitchAt = performance.now() + 2500 + Math.random() * 4000;
+
+  function scheduleNextGlitch(now: number) {
+    // 3–8 s between events on average, slightly skewed short on occasion.
+    const gap = 2800 + Math.random() * 5500;
+    nextGlitchAt = now + gap;
+  }
+
+  function startGlitch(now: number) {
+    const roll = Math.random();
+    if (roll < 0.78) {
+      glitchKind = 'jitter';
+      glitchUntil = now + 120 + Math.random() * 240;
+    } else {
+      glitchKind = 'shear';
+      glitchUntil = now + 60 + Math.random() * 160;
+      // Pick a random y band relative to the profile's height range.
+      glitchShearY = -1.3 + Math.random() * 1.9;
+      glitchShearBand = 0.12 + Math.random() * 0.18;
+      glitchShearDx = (Math.random() - 0.5) * 0.35;
+    }
+  }
+
+  function restoreGeometry() {
+    const arr = positions.array as Float32Array;
+    arr.set(chaliceOrig);
+    particlePositions.set(particlesOrig);
+    positions.needsUpdate = true;
+    particleGeom.attributes.position.needsUpdate = true;
+  }
+
+  function applyGlitch(now: number) {
+    if (glitchKind === 'off') return;
+    if (now >= glitchUntil) {
+      restoreGeometry();
+      glitchKind = 'off';
+      return;
+    }
+    const arr = positions.array as Float32Array;
+    const pArr = particlePositions;
+    if (glitchKind === 'jitter') {
+      const amp = 0.045;
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = chaliceOrig[i] + (Math.random() - 0.5) * amp;
+      }
+      for (let i = 0; i < pArr.length; i++) {
+        pArr[i] = particlesOrig[i] + (Math.random() - 0.5) * amp;
+      }
+    } else if (glitchKind === 'shear') {
+      // Only X is displaced for vertices within the band; everything else
+      // stays on the original position.
+      for (let i = 0; i < arr.length; i += 3) {
+        const y = chaliceOrig[i + 1];
+        const inBand = Math.abs(y - glitchShearY) < glitchShearBand;
+        arr[i] = chaliceOrig[i] + (inBand ? glitchShearDx : 0);
+        arr[i + 1] = chaliceOrig[i + 1];
+        arr[i + 2] = chaliceOrig[i + 2];
+      }
+      for (let i = 0; i < pArr.length; i += 3) {
+        const y = particlesOrig[i + 1];
+        const inBand = Math.abs(y - glitchShearY) < glitchShearBand;
+        pArr[i] = particlesOrig[i] + (inBand ? glitchShearDx : 0);
+        pArr[i + 1] = particlesOrig[i + 1];
+        pArr[i + 2] = particlesOrig[i + 2];
+      }
+    }
+    positions.needsUpdate = true;
+    particleGeom.attributes.position.needsUpdate = true;
+  }
 
   // Accent band rings — extra circles at the rim / knop equator / foot edge.
   // Implemented as thin LineLoop geometries so they sit exactly on the lathe
@@ -301,6 +393,14 @@ export function initHero(canvas: HTMLCanvasElement) {
         }
       }
       pos.needsUpdate = true;
+
+      // Polygon glitch — start one on schedule, apply/restore every frame
+      // until its TTL expires.
+      if (glitchKind === 'off' && current >= nextGlitchAt) {
+        startGlitch(current);
+        scheduleNextGlitch(current);
+      }
+      applyGlitch(current);
     }
 
     renderer.render(scene, camera);

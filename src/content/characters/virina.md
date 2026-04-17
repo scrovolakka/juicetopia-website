@@ -1,9 +1,13 @@
 ---
 name: ヴィリナ
-reading: ゔぃりな
+reading: ゔぃりな・こまつ
 portrait: ../../assets/characters/004-portrait.svg
 charId: C.004
 order: 4
+faction: 主人公
+role: 触媒／元ジューサー
+tagline: 搾る者の家系から降りた少女。動かさないことで、周囲の配置を変える。
+era: 現代紀
 mondoRefs: [zuk-sha, sacrabolla]
 leksikoRefs: [zuk-sha]
 ---

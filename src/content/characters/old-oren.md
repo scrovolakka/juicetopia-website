@@ -4,6 +4,10 @@ reading: おれんじい
 portrait: ../../assets/characters/005-portrait.svg
 charId: C.005
 order: 5
+faction: 緑の一族
+role: 古代の科学者／第七演算体
+tagline: オレンジを発明し世界に配った科学者。現在は脳組織のみで帝国の深部に稼働している。
+era: 古代
 mondoRefs: [nota-di-dol, komanda]
 leksikoRefs: [nota-di-dol, komanda, dol-sha]
 ---
