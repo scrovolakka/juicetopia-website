@@ -1,6 +1,6 @@
 ---
 name: サクラベリックス
-reading: さくらべりっくす
+reading: Sacraberixx
 portrait: ../../assets/characters/013-portrait.svg
 charId: C.013
 order: 2

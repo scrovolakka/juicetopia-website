@@ -1,6 +1,6 @@
 ---
 name: サトー
-reading: さとー
+reading: Satō
 portrait: ../../assets/characters/015-portrait.svg
 charId: C.015
 order: 2

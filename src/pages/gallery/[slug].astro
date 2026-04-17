@@ -31,6 +31,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const pad = (n: number) => String(n).padStart(4, '0');
 const date = entry.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
 const { Content } = await entry.render();
+
+// Orientation-based sizing: landscape fills the page column, portrait and
+// square keep the previous 960 px cap. astro:assets gives us the intrinsic
+// dimensions at build time.
+const imgAspect = entry.data.image.width / entry.data.image.height;
+const orientation =
+  imgAspect > 1.05 ? 'landscape' : imgAspect < 0.95 ? 'portrait' : 'square';
 ---
 
 <BaseLayout title={`${entry.data.title} / MONTRA-MESA`} mode="void" showRouteIndex={false}>
@@ -39,13 +46,17 @@ const { Content } = await entry.render();
       <p class="mono">[02 / MONTRA-MESA] · V.{pad(index)} / {pad(total)}</p>
     </header>
 
-    <div class="image-frame">
+    <div class="image-frame" data-orientation={orientation}>
       <Image
         src={entry.data.image}
         alt={entry.data.alt}
         class="image"
-        widths={[640, 960, 1280]}
-        sizes="(min-width: 72rem) 900px, 90vw"
+        widths={[640, 960, 1280, 1600]}
+        sizes={
+          orientation === 'landscape'
+            ? '(min-width: 72rem) 1152px, 95vw'
+            : '(min-width: 72rem) 960px, 90vw'
+        }
       />
     </div>
 
@@ -100,9 +111,18 @@ const { Content } = await entry.render();
     border: 1px solid var(--color-rule);
     background: #050504;
     overflow: hidden;
-    max-width: 960px;
     margin-inline: auto;
     width: 100%;
+  }
+  /* Landscape images breathe the full page-column (72rem, via .detail). */
+  .image-frame[data-orientation='landscape'] {
+    max-width: 100%;
+  }
+  /* Portrait / square stay at the previous 960 px cap so tall images don't
+     dominate the viewport. */
+  .image-frame[data-orientation='portrait'],
+  .image-frame[data-orientation='square'] {
+    max-width: 960px;
   }
   .image {
     width: 100%;

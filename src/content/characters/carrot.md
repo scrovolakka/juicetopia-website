@@ -1,6 +1,6 @@
 ---
 name: キャロット
-reading: きゃろっと
+reading: Carrot
 portrait: ../../assets/characters/012-portrait.svg
 charId: C.012
 order: 1

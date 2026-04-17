@@ -1,6 +1,6 @@
 ---
 name: ヴィリナ
-reading: ゔぃりな・こまつ
+reading: Virina Komatsu
 portrait: ../../assets/characters/004-portrait.svg
 charId: C.004
 order: 4

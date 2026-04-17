@@ -312,6 +312,74 @@ export function initHero(canvas: HTMLCanvasElement) {
   ring.position.set(0, 0.22, -1);
   scene.add(ring);
 
+  // ------------------------------------------------------------------------
+  // Grid corridor — vaporwave/retro-3D background. Two large planes (floor +
+  // ceiling) rendered with a shader that draws a moving grid, giving the
+  // sensation that the viewer is sliding forward through a tunnel while the
+  // chalice hangs suspended in the foreground.
+  // ------------------------------------------------------------------------
+  const gridUniforms = {
+    uTime: { value: 0 },
+    uColor: { value: new THREE.Color(0xd8ff3a) },
+    uFade: { value: 0.55 },
+    uScroll: { value: 2.2 }, // world units per second the grid appears to travel
+  };
+  const gridMat = new THREE.ShaderMaterial({
+    uniforms: gridUniforms,
+    vertexShader: /* glsl */ `
+      varying vec3 vWorldPos;
+      void main() {
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      varying vec3 vWorldPos;
+      uniform float uTime;
+      uniform vec3 uColor;
+      uniform float uFade;
+      uniform float uScroll;
+
+      void main() {
+        // Align grid to world XZ so the floor and ceiling share ruling.
+        vec2 coord = vWorldPos.xz;
+        // Scroll the Z axis forward — lines appear to move toward the camera.
+        coord.y += uTime * uScroll;
+        // Distance to nearest grid line in each axis.
+        vec2 g = abs(fract(coord) - 0.5);
+        float d = min(g.x, g.y);
+        // Anti-aliased line.
+        float line = 1.0 - smoothstep(0.0, 0.035, d);
+        // Distance fade — near the viewer it's sharp, near horizon it dies.
+        float dist = length(vWorldPos.xz);
+        float distFade = 1.0 - smoothstep(8.0, 34.0, dist);
+        // Softly kill very close to the camera too so the grid feels like it's
+        // sliding out from under the chalice rather than crowding the frame.
+        float nearFade = smoothstep(0.5, 4.0, dist);
+        float alpha = line * distFade * nearFade * uFade;
+        gl_FragColor = vec4(uColor, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  // Floor — below the chalice, extending deep into the scene.
+  const floorGeom = new THREE.PlaneGeometry(80, 120);
+  const floor = new THREE.Mesh(floorGeom, gridMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -2.2;
+  scene.add(floor);
+
+  // Ceiling — mirrored above.
+  const ceilingGeom = new THREE.PlaneGeometry(80, 120);
+  const ceiling = new THREE.Mesh(ceilingGeom, gridMat);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = 3.4;
+  scene.add(ceiling);
+
   scene.add(new THREE.AmbientLight(0xffffff, 1));
 
   let mouseX = 0;
@@ -401,6 +469,9 @@ export function initHero(canvas: HTMLCanvasElement) {
         scheduleNextGlitch(current);
       }
       applyGlitch(current);
+
+      // Scroll the grid corridor forward.
+      gridUniforms.uTime.value += dt;
     }
 
     renderer.render(scene, camera);
@@ -435,6 +506,9 @@ export function initHero(canvas: HTMLCanvasElement) {
     dripMat.dispose();
     ringGeom.dispose();
     ringMat.dispose();
+    floorGeom.dispose();
+    ceilingGeom.dispose();
+    gridMat.dispose();
   };
 }
 

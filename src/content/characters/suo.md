@@ -1,6 +1,6 @@
 ---
 name: スオ・カンジ
-reading: すお・かんじ
+reading: Suo Kanji
 portrait: ../../assets/characters/014-portrait.svg
 charId: C.014
 order: 1

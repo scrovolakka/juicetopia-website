@@ -1,6 +1,6 @@
 ---
 name: メランズブラ
-reading: めらんずぶら
+reading: Melanzbra
 portrait: ../../assets/characters/006-portrait.svg
 charId: C.006
 order: 1

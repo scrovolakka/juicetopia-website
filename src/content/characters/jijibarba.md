@@ -1,6 +1,6 @@
 ---
 name: ジジバルバ
-reading: じじばるば
+reading: Jijibarba
 portrait: ../../assets/characters/007-portrait.svg
 charId: C.007
 order: 2

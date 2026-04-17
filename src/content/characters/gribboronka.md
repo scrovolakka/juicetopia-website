@@ -1,6 +1,6 @@
 ---
 name: グリッボロンカ
-reading: ぐりっぼろんか
+reading: Gribboronka
 portrait: ../../assets/characters/010-portrait.svg
 charId: C.010
 order: 5

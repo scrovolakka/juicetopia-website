@@ -1,6 +1,6 @@
 ---
 name: モルドラッサ
-reading: もるどらっさ
+reading: Mordrassa
 portrait: ../../assets/characters/011-portrait.svg
 charId: C.011
 order: 6

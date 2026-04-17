@@ -1,6 +1,6 @@
 ---
 name: スクロヴロッカ
-reading: すくろゔろっか
+reading: Scrovolakka
 portrait: ../../assets/characters/008-portrait.svg
 charId: C.008
 order: 3

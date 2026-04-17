@@ -1,6 +1,6 @@
 ---
 name: オレン爺
-reading: おれんじい
+reading: Oren-Jii
 portrait: ../../assets/characters/005-portrait.svg
 charId: C.005
 order: 5
