@@ -4,14 +4,14 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 
 <BaseLayout title="NOTA" description="juicetopia — nota-di pana.">
   <article class="about page-column">
-    <header class="about-head">
+    <header class="about-head" data-reveal>
       <h1 class="about-title">NOTA<br /><span class="jp">について</span></h1>
       <p class="mono">[04 / NOTA] · NOTA-DI NORMA · A.02</p>
     </header>
 
     <div class="rule"></div>
 
-    <section class="about-body flow-8">
+    <section class="about-body flow-8" data-reveal>
       <p>
         juicetopia は、小説とビジュアルを公開するための小さなアーカイブです。網羅的ではなく、あえて選び取った断片だけを置いています。
       </p>
@@ -31,39 +31,36 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 
     <div class="rule"></div>
 
-    <section class="about-codex flow">
-      <h2>MONDO-DI NOTA <span class="jp-sub">—— 世界注</span></h2>
+    <section class="about-codex flow" data-reveal>
+      <h2>
+        <a class="codex-jump" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/`}
+          >MONDO-DI NOTA</a
+        >
+        <span class="jp-sub">—— 世界注（→ <a class="codex-jump" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/`}>全項</a>）</span>
+      </h2>
       <dl class="mono">
-        <div>
-          <dt>聖杯</dt>
-          <dd>情報の器。古い容器として記述され、しばしば器のない器として機能する。<span class="meta-dim">SACRABOLLA / OS</span></dd>
-        </div>
-        <div>
-          <dt>命令詩</dt>
-          <dd>空気を震わせるのではなく、定義を書き換える言葉。発声者は多く、読解者は少ない。<span class="meta-dim">KOMANDA</span></dd>
-        </div>
-        <div>
-          <dt>果汁化</dt>
-          <dd>記憶・経験・存在を流動資源へと圧搾する手続き。残渣は、ときに記憶として拾われる。<span class="meta-dim">SUK-FORNA</span></dd>
-        </div>
-        <div>
-          <dt>ジューストニウム</dt>
-          <dd>結晶化された果汁。採掘可能、可搬、爆発的。時代を一度ずらした物質。<span class="meta-dim">SUKTONIUM</span></dd>
-        </div>
-        <div>
-          <dt>脚注王制</dt>
-          <dd>本文ではなく注釈によって世界を統治する体制。法は増殖し、本文は読みにくくなる。<span class="meta-dim">NOTA-DI DOL</span></dd>
-        </div>
-        <div>
-          <dt>ジューサー</dt>
-          <dd>搾る者。聖杯との古い契約を世代ごとに引き継ぐ家系。稀に、契約から降りる者がいる。<span class="meta-dim">ZUK-SHA</span></dd>
-        </div>
+        {[
+          { slug: 'sacrabolla', jp: '聖杯', label: 'SACRABOLLA', body: '情報の器。古い容器として記述され、しばしば器のない器として機能する。' },
+          { slug: 'komanda', jp: '命令詩', label: 'KOMANDA', body: '空気を震わせるのではなく、定義を書き換える言葉。発声者は多く、読解者は少ない。' },
+          { slug: 'suk-forna', jp: '果汁化', label: 'SUK-FORNA', body: '記憶・経験・存在を流動資源へと圧搾する手続き。残渣は、ときに記憶として拾われる。' },
+          { slug: 'suktonium', jp: 'ジューストニウム', label: 'SUKTONIUM', body: '結晶化された果汁。採掘可能、可搬、爆発的。時代を一度ずらした物質。' },
+          { slug: 'nota-di-dol', jp: '脚注王制', label: 'NOTA-DI DOL', body: '本文ではなく注釈によって世界を統治する体制。法は増殖し、本文は読みにくくなる。' },
+          { slug: 'zuk-sha', jp: 'ジューサー', label: 'ZUK-SHA', body: '搾る者。聖杯との古い契約を世代ごとに引き継ぐ家系。稀に、契約から降りる者がいる。' },
+        ].map((c) => {
+          const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/mondo/${c.slug}/`;
+          return (
+            <div>
+              <dt><a class="codex-jump" href={href}>{c.jp}</a></dt>
+              <dd>{c.body}<span class="meta-dim">{c.label}</span></dd>
+            </div>
+          );
+        })}
       </dl>
     </section>
 
     <div class="rule"></div>
 
-    <section class="about-credits flow">
+    <section class="about-credits flow" data-reveal>
       <h2>GRATI-DI NOTA</h2>
       <dl class="mono">
         <div><dt>FORNA</dt><dd>Astro · Three.js</dd></div>
@@ -139,6 +136,11 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     color: var(--color-ink-muted);
     font-family: var(--font-mincho);
     letter-spacing: 0.12em;
+    transition: color var(--dur-fast) var(--ease-out);
+    border-bottom: 1px solid transparent;
+  }
+  .about-codex dl > div:hover dt {
+    border-bottom-color: var(--color-acid);
   }
   .about-credits dt {
     font-family: var(--font-mono);
@@ -147,6 +149,10 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
   .about-codex dd,
   .about-credits dd {
     color: var(--color-ink);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .about-codex dl > div:hover dd {
+    color: color-mix(in srgb, var(--color-ink) 100%, white 15%);
   }
   .about-codex dd {
     font-family: var(--font-mincho);
@@ -158,6 +164,15 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
     font-family: var(--font-mono);
     font-size: var(--fs-meta);
     letter-spacing: var(--ls-meta);
+  }
+  .codex-jump {
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .codex-jump:hover,
+  .codex-jump:focus-visible {
+    border-bottom-color: var(--color-acid);
+    color: var(--color-acid);
   }
   @media (max-width: 40rem) {
     .about-codex dl > div,

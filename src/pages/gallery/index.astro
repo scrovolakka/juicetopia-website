@@ -12,7 +12,7 @@ const pad = (n: number) => String(n).padStart(4, '0');
 <BaseLayout title="MONTRA-MESA" description="juicetopia montra-mesa pana." mode="void">
   <section class="gallery page-column flow-16">
     <header class="flow">
-      <h1 class="section-title">
+      <h1 class="section-title" data-reveal>
         MONTRA-MESA<br />
         <span class="jp">画集</span>
       </h1>
@@ -28,7 +28,7 @@ const pad = (n: number) => String(n).padStart(4, '0');
           const date = it.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
           const href = `${base}/gallery/${it.slug}/`;
           return (
-            <li class="cell">
+            <li class="cell" data-reveal>
               <a href={href} class="cell-link">
                 <div class="img-wrap">
                   <Image src={it.data.image} alt={it.data.alt} class="img" widths={[480, 800]} sizes="(min-width: 48rem) 33vw, 50vw" />
@@ -94,7 +94,16 @@ const pad = (n: number) => String(n).padStart(4, '0');
     border: 1px solid var(--color-rule);
     transition:
       border-color var(--dur-mid) var(--ease-out),
-      filter var(--dur-mid) var(--ease-out);
+      filter var(--dur-mid) var(--ease-out),
+      box-shadow var(--dur-mid) var(--ease-out);
+    animation: skeleton-pulse 1.8s ease-in-out infinite;
+  }
+  .img-wrap:has(.img[data-loaded]) {
+    animation: none;
+  }
+  @keyframes skeleton-pulse {
+    0%, 100% { border-color: var(--color-rule); }
+    50% { border-color: var(--color-acid-dim); }
   }
   .img {
     width: 100%;
@@ -107,10 +116,11 @@ const pad = (n: number) => String(n).padStart(4, '0');
   .cell-link:focus-visible .img-wrap {
     border-color: var(--color-acid);
     filter: saturate(1.1);
+    box-shadow: 0 0 24px rgba(216, 255, 58, 0.15);
   }
   .cell-link:hover .img,
   .cell-link:focus-visible .img {
-    transform: scale(1.015);
+    transform: scale(1.04);
   }
   .meta {
     display: flex;

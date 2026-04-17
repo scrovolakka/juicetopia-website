@@ -1,0 +1,231 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const all = await getCollection('cronika');
+const entries = await Promise.all(
+  all
+    .slice()
+    .sort((a, b) => b.data.loggedAt.getTime() - a.data.loggedAt.getTime())
+    .map(async (e) => ({ entry: e, rendered: await e.render() })),
+);
+const pad = (n: number) => String(n).padStart(2, '0');
+const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '.');
+
+const kindMap: Record<string, { jp: string; en: string }> = {
+  add: { jp: '追加', en: 'ADD' },
+  fix: { jp: '修繕', en: 'FIX' },
+  note: { jp: '手記', en: 'NOTE' },
+  release: { jp: '公刊', en: 'REL' },
+};
+
+// Use the most recent entry's hero image (if any) as the page-level OG image.
+const latestHero = entries.find((e) => e.entry.data.heroImage);
+---
+
+<BaseLayout
+  title="CRONIKA"
+  description="juicetopia — 編集後記 / log."
+  mode="bone"
+  ogImage={latestHero?.entry.data.heroImage}
+  ogImageAlt={latestHero?.entry.data.heroAlt ?? latestHero?.entry.data.title}
+>
+  <section class="cronika page-column flow-16">
+    <header class="flow" data-reveal>
+      <h1 class="section-title">
+        CRONIKA<br />
+        <span class="jp">編集後記</span>
+      </h1>
+      <p class="mono">LOGO-DI VOLA · {pad(entries.length)} FAKTA</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <p class="lede" data-reveal>
+      この書庫に何が増えたか、何を直したか、編集者が何を考えたか、を時系列の逆で並べる。
+      通読しなくてよい。関心のある項だけ読めばよい。
+    </p>
+
+    <div class="rule"></div>
+
+    <ol class="log">
+      {
+        entries.map(({ entry, rendered }) => {
+          const { Content } = rendered;
+          const k = kindMap[entry.data.kind] ?? kindMap.note;
+          return (
+            <li class="log-item" data-reveal>
+              <header class="log-head">
+                <div class="log-left">
+                  <span class="log-id mono acid">{entry.data.entryId}</span>
+                  <span class={`log-kind mono kind-${entry.data.kind}`}>
+                    <span class="kind-en">{k.en}</span>
+                    <span class="kind-jp">{k.jp}</span>
+                  </span>
+                </div>
+                <time class="log-date mono meta-dim" datetime={entry.data.loggedAt.toISOString()}>
+                  {fmt(entry.data.loggedAt)}
+                </time>
+              </header>
+
+              <h2 class="log-title">{entry.data.title}</h2>
+
+              {entry.data.heroImage && (
+                <figure
+                  class={`log-hero hero-${(entry.data.heroAspect ?? '16:9').replace(':', '-')}`}
+                >
+                  <div class="hero-frame">
+                    <Image
+                      src={entry.data.heroImage}
+                      alt={entry.data.heroAlt ?? entry.data.title}
+                      widths={[640, 960, 1280]}
+                      sizes="(min-width: 48rem) 40rem, 90vw"
+                    />
+                  </div>
+                  {entry.data.heroCaption && (
+                    <figcaption class="mono">{entry.data.heroCaption}</figcaption>
+                  )}
+                </figure>
+              )}
+
+              <div class="log-body">
+                <Content />
+              </div>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </section>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .section-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.32em;
+    letter-spacing: 0.25em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .lede {
+    max-width: var(--max-reading);
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    color: var(--color-ink-muted);
+  }
+  .log {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-12);
+  }
+  .log-item {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-acid-dim);
+  }
+  .log-item:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+  .log-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .log-left {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+  .log-id {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.14em;
+  }
+  .log-kind {
+    display: inline-flex;
+    gap: 0.4em;
+    padding: 0.15em 0.55em;
+    border: 1px solid var(--color-rule-strong);
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+  }
+  .kind-jp {
+    font-family: var(--font-mincho);
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+  }
+  .kind-add { border-color: var(--color-acid); }
+  .kind-release { border-color: color-mix(in srgb, var(--color-acid) 55%, black); }
+  .kind-fix { border-color: #c0331a; }
+  .kind-note { border-color: var(--color-rule-strong); }
+
+  .log-date {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+  }
+  .log-title {
+    font-family: var(--font-mincho);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+  }
+  .log-hero {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--max-reading);
+  }
+  .log-hero .hero-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+  }
+  .log-hero.hero-16-9 .hero-frame { aspect-ratio: 16 / 9; }
+  .log-hero.hero-4-3 .hero-frame { aspect-ratio: 4 / 3; }
+  .log-hero.hero-3-2 .hero-frame { aspect-ratio: 3 / 2; }
+  .log-hero.hero-1-1 .hero-frame { aspect-ratio: 1 / 1; }
+  .log-hero .hero-frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .log-hero figcaption {
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    padding-inline-start: 1em;
+    border-inline-start: 1px solid var(--color-acid-dim);
+  }
+  .log-body {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    letter-spacing: var(--ls-reading);
+    max-width: var(--max-reading);
+  }
+  .log-body :global(p) {
+    margin-block: 1.1em;
+  }
+  .log-body :global(p:first-child) {
+    margin-top: 0;
+  }
+</style>

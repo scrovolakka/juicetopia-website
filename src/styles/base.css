@@ -188,3 +188,64 @@ ruby rp {
   padding-inline: var(--page-pad);
   padding-block: var(--space-section) var(--space-16);
 }
+
+/* ============================================================
+   Body figures — inline images inside article bodies.
+   - Plain `![alt](./img.png)` renders at natural ratio, constrained
+     to 100% width with a subtle frame.
+   - Images whose alt starts with [16:9], [4:3], [3:2], [1:1] are
+     wrapped (by remark-aspect-image) into a .fig .fig-<ratio> figure
+     and cropped to the ratio via object-fit: cover.
+   ============================================================ */
+
+/* Plain body images — frame; no caption generated */
+.body p > img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--color-rule);
+  margin-block: 1.5em;
+  background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+}
+
+/* Aspect-cropped figures from remark-aspect-image */
+.body .fig {
+  margin: 2em 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.body .fig .fig-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+}
+.body .fig-16-9 .fig-frame { aspect-ratio: 16 / 9; }
+.body .fig-4-3 .fig-frame { aspect-ratio: 4 / 3; }
+.body .fig-3-2 .fig-frame { aspect-ratio: 3 / 2; }
+.body .fig-1-1 .fig-frame { aspect-ratio: 1 / 1; }
+.body .fig .fig-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  border: none;
+}
+.body .fig figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-ink-muted);
+  padding-inline-start: 1em;
+  border-inline-start: 1px solid var(--color-acid-dim);
+  text-transform: none;
+}
+
+/* In vertical writing mode, figures stay in horizontal flow like code blocks */
+[data-writing='vertical'] .body .fig,
+[data-writing='vertical'] .body p > img {
+  writing-mode: horizontal-tb;
+  text-orientation: initial;
+}

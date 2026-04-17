@@ -1,6 +1,72 @@
-// Hero 3D — low-poly torus knot wireframe, slow rotation, mild parallax.
-// Kept minimal on purpose: single mesh, no post-processing.
+/**
+ * Hero 3D — SACRABOLLA.
+ * Low-poly wireframe chalice on a lathe, with acid vertex dots, an interior
+ * liquid surface (ink red), and a loop of drip particles escaping the rim.
+ * Rotates on Y with a slight X wobble and mild mouse parallax.
+ * Respects prefers-reduced-motion.
+ */
 import * as THREE from 'three';
+
+type Profile = [number, number][];
+
+/**
+ * Half-section profile of the chalice, traced from the bottom pole of the foot,
+ * up and around to the top of the rim, down the interior wall, and back to the
+ * interior-bottom pole. LatheGeometry revolves this around the Y axis.
+ *
+ * Measurements are in world units — the whole mesh is scaled to fit.
+ */
+const CHALICE_PROFILE: Profile = [
+  // Foot — compact pedestal. Diameter is now clearly smaller than the bowl so
+  // the silhouette reads as "chalice on a stem" rather than a funnel.
+  [0.00, -1.30],
+  [0.70, -1.30],
+  [0.72, -1.27],
+  [0.66, -1.22],
+  [0.34, -1.14],
+  [0.22, -1.06],
+  // Stem joint — fluted region
+  [0.18, -0.96],
+  [0.17, -0.88],
+  // Knop — bulbous node
+  [0.22, -0.83],
+  [0.36, -0.76],
+  [0.36, -0.62],
+  [0.22, -0.55],
+  [0.17, -0.48],
+  // Upper shaft — thin neck below bowl
+  [0.16, -0.40],
+  // Bowl — rounded / hemispheric, not conic. Tight base, rapid curve outward,
+  // upper wall nearly vertical into the rim.
+  [0.22, -0.35],
+  [0.42, -0.28],
+  [0.75, -0.12],
+  [1.00, 0.12],
+  [1.15, 0.35],
+  [1.21, 0.52],
+  // Rim — outer lip
+  [1.23, 0.58],
+  [1.23, 0.62],
+  [1.15, 0.62],
+  // Interior wall — descend mirroring the bowl's curve back to the axis. Inner
+  // bottom sits slightly above exterior bottom to imply wall thickness.
+  [1.08, 0.55],
+  [0.95, 0.35],
+  [0.75, 0.05],
+  [0.45, -0.20],
+  [0.20, -0.28],
+  [0.00, -0.28],
+];
+
+// Ring loops at key y-values give the wireframe visible "bands" at the rim,
+// the knop equator, and the foot edge.
+const BAND_YS = [0.62, 0.58, -0.69, -1.27];
+
+function buildChaliceGeometry(): THREE.LatheGeometry {
+  const points = CHALICE_PROFILE.map(([x, y]) => new THREE.Vector2(x, y));
+  const segments = 12; // low-poly, matches the torus knot's density
+  return new THREE.LatheGeometry(points, segments);
+}
 
 export function initHero(canvas: HTMLCanvasElement) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
@@ -15,22 +81,135 @@ export function initHero(canvas: HTMLCanvasElement) {
 
   const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 6);
+  const BASE_FOV = 45;
+  const camera = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.1, 100);
+  camera.position.set(0, 0.05, 6);
 
-  // Torus knot — low tube / low radial segments for visible polygons
-  const geom = new THREE.TorusKnotGeometry(1.2, 0.36, 80, 10, 2, 3);
-  const mat = new THREE.MeshBasicMaterial({
+  // Chalice body — wireframe bone
+  const chaliceGeom = buildChaliceGeometry();
+  const chaliceMat = new THREE.MeshBasicMaterial({
     color: 0xefebe2,
     wireframe: true,
     transparent: true,
     opacity: 0.92,
+    side: THREE.DoubleSide,
   });
-  const mesh = new THREE.Mesh(geom, mat);
-  scene.add(mesh);
+  const chalice = new THREE.Mesh(chaliceGeom, chaliceMat);
+  // Non-uniform scale: slightly taller than wide, and overall larger so the
+  // chalice dominates the frame. Lifted on Y so its mass centers vertically
+  // (the profile is bottom-heavy without this shift).
+  chalice.scale.set(1.18, 1.32, 1.18);
+  chalice.position.y = 0.44;
+  scene.add(chalice);
 
-  // Glow ring (static) behind for acid bleed
-  const ringGeom = new THREE.RingGeometry(2.2, 2.22, 64);
+  // Vertex particles — chartreuse dots on wireframe vertices
+  const positions = chaliceGeom.attributes.position;
+  const particleCount = Math.min(positions.count, 420);
+  const stride = Math.max(1, Math.floor(positions.count / particleCount));
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    const idx = i * stride;
+    particlePositions[i * 3] = positions.getX(idx);
+    particlePositions[i * 3 + 1] = positions.getY(idx);
+    particlePositions[i * 3 + 2] = positions.getZ(idx);
+  }
+  const particleGeom = new THREE.BufferGeometry();
+  particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  const particleMat = new THREE.PointsMaterial({
+    color: 0xd8ff3a,
+    size: 0.028,
+    transparent: true,
+    opacity: 0.7,
+    sizeAttenuation: true,
+    depthWrite: false,
+  });
+  const particles = new THREE.Points(particleGeom, particleMat);
+  chalice.add(particles);
+
+  // Accent band rings — extra circles at the rim / knop equator / foot edge.
+  // Implemented as thin LineLoop geometries so they sit exactly on the lathe
+  // surface and rotate with the chalice.
+  const bandMat = new THREE.LineBasicMaterial({
+    color: 0xd8ff3a,
+    transparent: true,
+    opacity: 0.55,
+  });
+  const bands: THREE.LineLoop[] = [];
+  for (const y of BAND_YS) {
+    // Find the x at this y by walking the profile.
+    const x = profileXAtY(CHALICE_PROFILE, y) ?? 0;
+    if (x <= 0.01) continue;
+    const circle = new THREE.BufferGeometry();
+    const n = 48;
+    const pts = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      pts[i * 3] = Math.cos(a) * x;
+      pts[i * 3 + 1] = y;
+      pts[i * 3 + 2] = Math.sin(a) * x;
+    }
+    circle.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+    const loop = new THREE.LineLoop(circle, bandMat);
+    chalice.add(loop);
+    bands.push(loop);
+  }
+
+  // Interior liquid surface — acid disc at the inner rim level.
+  // Very thin disc slightly below the rim, rendered double-sided so it reads
+  // from above and through the wireframe from the side.
+  const liquidGeom = new THREE.CircleGeometry(1.06, 48);
+  const liquidMat = new THREE.MeshBasicMaterial({
+    color: 0xd8ff3a,
+    transparent: true,
+    opacity: 0.65,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const liquid = new THREE.Mesh(liquidGeom, liquidMat);
+  liquid.rotation.x = -Math.PI / 2;
+  liquid.position.y = 0.55; // just beneath the rim top, inside the inner wall
+  chalice.add(liquid);
+
+  // Drip particles — a fixed pool of descending acid points spawned at the rim.
+  // Each one falls under gravity, fades out, then respawns at the rim edge.
+  const DRIP_COUNT = 14;
+  const dripPositions = new Float32Array(DRIP_COUNT * 3);
+  const dripVelocities = new Float32Array(DRIP_COUNT); // y velocity only; x,z static
+  const dripAges = new Float32Array(DRIP_COUNT);
+  const dripLifes = new Float32Array(DRIP_COUNT);
+  const dripAngles = new Float32Array(DRIP_COUNT);
+  const RIM_RADIUS = 1.22;
+  const RIM_Y = 0.60;
+
+  function seedDrip(i: number, initial = false) {
+    const a = Math.random() * Math.PI * 2;
+    dripAngles[i] = a;
+    dripPositions[i * 3] = Math.cos(a) * RIM_RADIUS;
+    dripPositions[i * 3 + 1] = initial ? RIM_Y - Math.random() * 1.8 : RIM_Y;
+    dripPositions[i * 3 + 2] = Math.sin(a) * RIM_RADIUS;
+    dripVelocities[i] = 0;
+    dripAges[i] = initial ? Math.random() * 2 : 0;
+    dripLifes[i] = 2.2 + Math.random() * 1.2;
+  }
+  for (let i = 0; i < DRIP_COUNT; i++) seedDrip(i, true);
+
+  const dripGeom = new THREE.BufferGeometry();
+  dripGeom.setAttribute('position', new THREE.BufferAttribute(dripPositions, 3));
+  const dripMat = new THREE.PointsMaterial({
+    color: 0xd8ff3a,
+    size: 0.055,
+    transparent: true,
+    opacity: 0.85,
+    sizeAttenuation: true,
+    depthWrite: false,
+  });
+  const drips = new THREE.Points(dripGeom, dripMat);
+  // Drips live in chalice space so they rotate with it — feels physical.
+  chalice.add(drips);
+
+  // Acid halo ring behind — sized to sit just outside the enlarged chalice
+  // and lifted to match the chalice's vertical center.
+  const ringGeom = new THREE.RingGeometry(2.55, 2.58, 64);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xd8ff3a,
     transparent: true,
@@ -38,14 +217,14 @@ export function initHero(canvas: HTMLCanvasElement) {
     side: THREE.DoubleSide,
   });
   const ring = new THREE.Mesh(ringGeom, ringMat);
-  ring.position.z = -1;
+  ring.position.set(0, 0.22, -1);
   scene.add(ring);
 
-  // Light not needed for MeshBasicMaterial, but keep a minimal ambient for future material swap
   scene.add(new THREE.AmbientLight(0xffffff, 1));
 
   let mouseX = 0;
   let mouseY = 0;
+  let scrollY = 0;
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -55,7 +234,6 @@ export function initHero(canvas: HTMLCanvasElement) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
   resize();
@@ -67,31 +245,74 @@ export function initHero(canvas: HTMLCanvasElement) {
   }
   window.addEventListener('pointermove', onMove, { passive: true });
 
+  function onScroll() {
+    scrollY = window.scrollY;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
   let raf = 0;
   let t = 0;
-  const ROT_SPEED = 0.0015;
+  const ROT_SPEED = 0.0035;
+  const GRAVITY = 1.8;
+  let lastTime = performance.now();
 
-  function tick() {
+  function tick(now?: number) {
     t += 1;
+    const current = now ?? performance.now();
+    const dt = Math.min(0.05, (current - lastTime) / 1000);
+    lastTime = current;
+
     if (!reduce.matches) {
-      mesh.rotation.y += ROT_SPEED;
-      mesh.rotation.x += ROT_SPEED * 0.4;
-      // Mild parallax
-      mesh.rotation.z = mouseX * 0.08;
-      camera.position.x += (mouseX * 0.2 - camera.position.x) * 0.04;
-      camera.position.y += (-mouseY * 0.12 - camera.position.y) * 0.04;
+      // Y-axis rotation — the natural axis for a cup on display.
+      chalice.rotation.y += ROT_SPEED;
+      // Subtle X wobble and mouse-driven Z lean, no continuous X spin.
+      chalice.rotation.x = Math.sin(t * 0.005) * 0.06 - mouseY * 0.05;
+      chalice.rotation.z = mouseX * 0.04;
+
+      camera.position.x += (mouseX * 0.18 - camera.position.x) * 0.04;
+      camera.position.y += (-mouseY * 0.1 + 0.05 - camera.position.y) * 0.04;
       camera.lookAt(0, 0, 0);
+
+      const fovOffset = Math.min(scrollY * 0.008, 4);
+      camera.fov = BASE_FOV + fovOffset;
+      camera.updateProjectionMatrix();
+
+      // Particle twinkle on the vertex dots
+      particleMat.opacity = 0.4 + 0.35 * Math.sin(t * 0.02);
+
+      // Liquid subtle pulse on opacity (as if the surface catches light)
+      liquidMat.opacity = 0.55 + 0.15 * Math.sin(t * 0.015);
+
+      // Drip simulation — advance each point, respawn when it falls off / dies.
+      const pos = dripGeom.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < DRIP_COUNT; i++) {
+        dripAges[i] += dt;
+        dripVelocities[i] += GRAVITY * dt;
+        const newY = pos.getY(i) - dripVelocities[i] * dt;
+        pos.setY(i, newY);
+        if (newY < -1.6 || dripAges[i] > dripLifes[i]) {
+          seedDrip(i, false);
+          pos.setXYZ(
+            i,
+            dripPositions[i * 3],
+            dripPositions[i * 3 + 1],
+            dripPositions[i * 3 + 2],
+          );
+        }
+      }
+      pos.needsUpdate = true;
     }
+
     renderer.render(scene, camera);
     raf = requestAnimationFrame(tick);
   }
   tick();
 
-  // Pause on hidden tab
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       cancelAnimationFrame(raf);
     } else {
+      lastTime = performance.now();
       tick();
     }
   });
@@ -100,10 +321,47 @@ export function initHero(canvas: HTMLCanvasElement) {
     cancelAnimationFrame(raf);
     ro.disconnect();
     window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('scroll', onScroll);
     renderer.dispose();
-    geom.dispose();
-    mat.dispose();
+    chaliceGeom.dispose();
+    chaliceMat.dispose();
+    particleGeom.dispose();
+    particleMat.dispose();
+    for (const b of bands) b.geometry.dispose();
+    bandMat.dispose();
+    liquidGeom.dispose();
+    liquidMat.dispose();
+    dripGeom.dispose();
+    dripMat.dispose();
     ringGeom.dispose();
     ringMat.dispose();
   };
+}
+
+/**
+ * Walk the profile and return the outer-wall x coordinate at the given y, if
+ * y lies within a segment. Used to place accent band rings on the surface.
+ * Scans from the first vertex to the rim (rising-y portion of the profile)
+ * so we get the outer wall, not the interior return.
+ */
+function profileXAtY(profile: Profile, y: number): number | null {
+  let ascending = true;
+  let lastY = profile[0][1];
+  for (let i = 1; i < profile.length; i++) {
+    const [x0, y0] = profile[i - 1];
+    const [x1, y1] = profile[i];
+    if (ascending && y1 < lastY) {
+      // We crossed the rim — stop considering further segments (interior wall).
+      ascending = false;
+      break;
+    }
+    lastY = y1;
+    if ((y0 <= y && y <= y1) || (y1 <= y && y <= y0)) {
+      const dy = y1 - y0;
+      if (Math.abs(dy) < 1e-6) return x0;
+      const t = (y - y0) / dy;
+      return x0 + (x1 - x0) * t;
+    }
+  }
+  return null;
 }

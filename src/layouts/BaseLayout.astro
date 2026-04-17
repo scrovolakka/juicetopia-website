@@ -8,23 +8,59 @@ import SiteHeader from '~/components/SiteHeader.astro';
 import SiteFooter from '~/components/SiteFooter.astro';
 import RouteIndex from '~/components/RouteIndex.astro';
 import { modeFor, routeIndex } from '~/lib/nav';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 
 interface Props {
   title?: string;
   description?: string;
   mode?: 'bone' | 'void';
   showRouteIndex?: boolean;
+  /**
+   * Optional OG / Twitter Card image. Processed to 1200×630 JPG (the generally
+   * accepted "summary_large_image" size). If omitted, no og:image is emitted.
+   */
+  ogImage?: ImageMetadata;
+  ogImageAlt?: string;
 }
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const path = Astro.url.pathname.replace(base, '') || '/';
 const autoMode = modeFor(path);
-const { title, description, mode = autoMode, showRouteIndex = true } = Astro.props;
+const {
+  title,
+  description,
+  mode = autoMode,
+  showRouteIndex = true,
+  ogImage,
+  ogImageAlt,
+} = Astro.props;
 
 const pageTitle = title ? `${title} — juicetopia` : 'juicetopia';
 const desc = description ?? 'juicetopia — pana-di leyda-mono & montra-mesa.';
 const current = routeIndex(path);
 const grainHref = `${base}/grain.svg`;
+
+// Build absolute URLs for OG / canonical. Astro.site must be set in
+// astro.config.mjs (it is: https://scrovolakka.github.io).
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString();
+
+let ogImageUrl: string | undefined;
+let ogImageWidth: number | undefined;
+let ogImageHeight: number | undefined;
+if (ogImage) {
+  const processed = await getImage({
+    src: ogImage,
+    width: 1200,
+    height: 630,
+    format: 'jpg',
+    // fit: 'cover' would be nice but sharp defaults handle most cases; with
+    // width+height set, astro/sharp crops/fits as needed.
+  });
+  ogImageUrl = new URL(processed.src, Astro.site).toString();
+  ogImageWidth = processed.attributes.width ?? 1200;
+  ogImageHeight = processed.attributes.height ?? 630;
+}
 ---
 
 <!doctype html>
@@ -45,9 +81,27 @@ const grainHref = `${base}/grain.svg`;
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho+B1:wght@400;500&family=Space+Grotesk:wght@400;500&display=swap"
     />
 
+    <link rel="canonical" href={canonicalUrl} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="juicetopia" />
+    <meta property="og:locale" content="ja_JP" />
+    {ogImageUrl && (
+      <>
+        <meta property="og:image" content={ogImageUrl} />
+        {ogImageWidth && <meta property="og:image:width" content={String(ogImageWidth)} />}
+        {ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
+        {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={ogImageUrl} />
+        {ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
+      </>
+    )}
+    {!ogImageUrl && <meta name="twitter:card" content="summary" />}
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={desc} />
     <meta name="generator" content={Astro.generator} />
   </head>
   <body style={`--grain-url: url('${grainHref}');`}>
@@ -70,6 +124,9 @@ const grainHref = `${base}/grain.svg`;
 
     <SiteFooter />
 
+    <script>
+      import '~/scripts/scroll-reveal';
+    </script>
     <script>
       // Trigger sweep on internal link clicks (skip modifier keys and external / hash)
       const sweep = document.getElementById('fx-sweep');

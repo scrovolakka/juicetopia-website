@@ -35,6 +35,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   totalChapters={total}
   publishedAt={entry.data.publishedAt}
   indent={entry.data.indent}
+  series={entry.data.series}
+  description={entry.data.summary}
+  heroImage={entry.data.heroImage}
+  heroAlt={entry.data.heroAlt}
+  heroCaption={entry.data.heroCaption}
+  heroAspect={entry.data.heroAspect}
 >
   <Content />
 

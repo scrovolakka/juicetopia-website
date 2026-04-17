@@ -95,6 +95,20 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       });
     });
   }
+
+  // Scroll → enhance header blur
+  const header = document.querySelector('.site-header') as HTMLElement | null;
+  if (header) {
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 100);
+        ticking = false;
+      });
+    }, { passive: true });
+  }
 </script>
 
 <style>
@@ -105,6 +119,14 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     background: color-mix(in srgb, var(--color-bg) 82%, transparent);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    transition:
+      backdrop-filter var(--dur-mid) var(--ease-out),
+      background var(--dur-mid) var(--ease-out);
+  }
+  .site-header.scrolled {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--color-bg) 90%, transparent);
   }
   .bar {
     display: grid;
@@ -145,9 +167,27 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       -1px 0 0 var(--color-ca-magenta),
       1px 0 0 var(--color-ca-cyan);
   }
-  .nav-link.is-current .l {
-    border-bottom: 1px solid var(--color-acid);
-    padding-bottom: 2px;
+  .nav-link .l {
+    position: relative;
+  }
+  .nav-link .l::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: var(--color-acid);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-mid) var(--ease-out);
+  }
+  .nav-link:hover .l::after,
+  .nav-link:focus-visible .l::after {
+    transform: scaleX(1);
+  }
+  .nav-link.is-current .l::after {
+    transform: scaleX(1);
   }
 
   /* Burger button — hidden on desktop */

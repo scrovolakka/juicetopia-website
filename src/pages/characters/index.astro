@@ -1,13 +1,25 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const all = await getCollection('characters');
 const chars = await Promise.all(
   all
     .sort((a, b) => a.data.order - b.data.order)
-    .map(async (c) => ({ entry: c, rendered: await c.render() })),
+    .map(async (c) => {
+      const rendered = await c.render();
+      const mondoRefs = await Promise.all(
+        (c.data.mondoRefs ?? []).map((slug) => getEntry('codex', slug).catch(() => null)),
+      ).then((arr) => arr.filter(Boolean));
+      const leksikoRefs = await Promise.all(
+        (c.data.leksikoRefs ?? []).map((slug) =>
+          getEntry('lexicon', slug).catch(() => null),
+        ),
+      ).then((arr) => arr.filter(Boolean));
+      return { entry: c, rendered, mondoRefs, leksikoRefs };
+    }),
 );
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
@@ -15,7 +27,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <BaseLayout title="NOMA-DI MOKURO" description="juicetopia noma-di pana.">
   <section class="characters page-column flow-16">
     <header class="flow">
-      <h1 class="section-title">
+      <h1 class="section-title" data-reveal>
         NOMA-DI MOKURO<br />
         <span class="jp">登場人物</span>
       </h1>
@@ -26,10 +38,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
     <ul class="char-list">
       {
-        chars.map(({ entry, rendered }) => {
+        chars.map(({ entry, rendered, mondoRefs, leksikoRefs }) => {
           const { Content } = rendered;
           return (
-            <li class="char">
+            <li class="char" id={entry.data.charId} data-reveal>
               <div class="portrait">
                 <Image src={entry.data.portrait} alt={entry.data.name} widths={[240, 480]} sizes="(min-width: 48rem) 240px, 50vw" />
               </div>
@@ -44,6 +56,36 @@ const pad = (n: number) => String(n).padStart(2, '0');
                 <div class="bio">
                   <Content />
                 </div>
+                {(mondoRefs.length > 0 || leksikoRefs.length > 0) && (
+                  <div class="char-refs mono">
+                    {mondoRefs.length > 0 && (
+                      <div class="refs-row">
+                        <span class="refs-label meta-dim">MONDO</span>
+                        {mondoRefs.map((m: any, i: number) => (
+                          <>
+                            {i > 0 && <span class="refs-sep meta-dim">·</span>}
+                            <a class="ref-a" href={`${base}/mondo/${m.slug}/`}>
+                              {m.data.label}
+                            </a>
+                          </>
+                        ))}
+                      </div>
+                    )}
+                    {leksikoRefs.length > 0 && (
+                      <div class="refs-row">
+                        <span class="refs-label meta-dim">LEKSIKO</span>
+                        {leksikoRefs.map((l: any, i: number) => (
+                          <>
+                            {i > 0 && <span class="refs-sep meta-dim">·</span>}
+                            <a class="ref-a" href={`${base}/lexicon/#${l.slug}`}>
+                              {l.data.word}
+                            </a>
+                          </>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </li>
           );
@@ -78,22 +120,35 @@ const pad = (n: number) => String(n).padStart(2, '0');
   }
   .char {
     display: grid;
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 320px 1fr;
     gap: var(--space-8);
     align-items: start;
-    border-top: 1px solid var(--color-rule);
+    border-top: none;
     padding-top: var(--space-8);
+    position: relative;
+  }
+  .char + .char::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-acid-dim), transparent);
   }
   .char:first-child {
-    border-top: 0;
     padding-top: 0;
   }
   .portrait {
-    width: 240px;
-    height: 240px;
+    width: 320px;
+    height: 320px;
     overflow: hidden;
     border: 1px solid var(--color-rule);
     background: var(--color-bg);
+    transition: border-color var(--dur-mid) var(--ease-out);
+  }
+  .char:hover .portrait {
+    border-color: var(--color-acid);
   }
   .portrait :global(img) {
     width: 100%;
@@ -128,6 +183,43 @@ const pad = (n: number) => String(n).padStart(2, '0');
     letter-spacing: 0.04em;
     max-width: 40ch;
   }
+  .char:target {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--color-acid);
+  }
+  .char-refs {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--color-rule);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.1em;
+  }
+  .refs-row {
+    display: flex;
+    gap: 0.6em;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+  .refs-label {
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+    width: 4rem;
+  }
+  .refs-sep {
+    color: var(--color-ink-muted);
+  }
+  .ref-a {
+    color: var(--color-ink);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .ref-a:hover,
+  .ref-a:focus-visible {
+    border-bottom-color: var(--color-acid);
+    color: var(--color-acid);
+  }
 
   @media (max-width: 48rem) {
     .char {
@@ -135,8 +227,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
       gap: var(--space-4);
     }
     .portrait {
-      width: 180px;
-      height: 180px;
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      aspect-ratio: 1;
     }
   }
 </style>

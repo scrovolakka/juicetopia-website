@@ -113,6 +113,28 @@
   }
 }
 
+/* Scroll reveal */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+[data-reveal].revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Acid flash on link click */
+a:active:not(.acid-link) {
+  box-shadow: 0 0 0 2px var(--color-acid);
+  transition: box-shadow 0ms;
+}
+a:not(:active) {
+  transition: box-shadow 150ms var(--ease-out);
+}
+
 /* Reduced motion — kill all movement, keep static textures */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -128,5 +150,12 @@
   .acid-link:hover,
   .acid-link:focus-visible {
     text-shadow: none;
+  }
+  .fx-scanlines {
+    display: none;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
   }
 }

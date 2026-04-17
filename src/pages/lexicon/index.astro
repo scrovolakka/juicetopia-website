@@ -1,0 +1,344 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection, getEntry } from 'astro:content';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const all = await getCollection('lexicon');
+const entries = all.sort((a, b) => {
+  // Within each category, by order then alphabetical
+  if (a.data.category !== b.data.category) {
+    const catOrder = ['core', 'compound', 'common', 'affix'];
+    return catOrder.indexOf(a.data.category) - catOrder.indexOf(b.data.category);
+  }
+  if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+  return a.data.word.localeCompare(b.data.word);
+});
+
+type Entry = (typeof entries)[number];
+const byCategory = new Map<string, Entry[]>();
+for (const e of entries) {
+  const k = e.data.category;
+  if (!byCategory.has(k)) byCategory.set(k, []);
+  byCategory.get(k)!.push(e);
+}
+const catLabel: Record<string, { jp: string; en: string }> = {
+  core: { jp: '根語', en: 'CORE' },
+  compound: { jp: '合成語', en: 'COMPOUND' },
+  common: { jp: '常用', en: 'COMMON' },
+  affix: { jp: '接辞', en: 'AFFIX' },
+};
+const catSections = ['core', 'compound', 'common', 'affix']
+  .filter((k) => byCategory.has(k))
+  .map((k) => ({ key: k, label: catLabel[k], items: byCategory.get(k)! }));
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Resolve related lexicon entries for each entry
+async function resolveRefs(slugs: string[]) {
+  return (
+    await Promise.all(slugs.map((s) => getEntry('lexicon', s).catch(() => null)))
+  ).filter(Boolean);
+}
+const enrichedEntries = await Promise.all(
+  entries.map(async (e) => ({
+    entry: e,
+    refs: await resolveRefs(e.data.seeAlso ?? []),
+  })),
+);
+const refsMap = new Map(enrichedEntries.map((x) => [x.entry.slug, x.refs]));
+---
+
+<BaseLayout title="LEKSIKO" description="juicetopia — 辞書 / juicetopian lexicon." mode="bone">
+  <section class="leksiko page-column flow-16">
+    <header class="flow" data-reveal>
+      <h1 class="section-title">
+        LEKSIKO<br />
+        <span class="jp">辞書</span>
+      </h1>
+      <p class="mono">VOKABO · {pad(entries.length)} FAKTA</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <p class="lede" data-reveal>
+      ジューストピア語の辞書。語は root（根語）→ compound（合成語）→ common（常用）→ affix（接辞）の順で並ぶ。
+      定義は暫定であり、本文中の用例とのずれは本文側が正しい。
+    </p>
+
+    <nav class="cat-nav mono" aria-label="Categories" data-reveal>
+      {catSections.map((s) => (
+        <a class="cat-chip" href={`#cat-${s.key}`}>
+          <span class="acid">·</span>
+          <span class="cat-en">{s.label.en}</span>
+          <span class="cat-jp">{s.label.jp}</span>
+          <span class="cat-ct meta-dim">{pad(s.items.length)}</span>
+        </a>
+      ))}
+    </nav>
+
+    <div class="rule"></div>
+
+    {
+      catSections.map((sec) => (
+        <article class="cat flow-8" id={`cat-${sec.key}`}>
+          <header class="cat-head" data-reveal>
+            <h2 class="cat-title">
+              <span class="cat-title-jp">{sec.label.jp}</span>
+              <span class="mono meta-dim cat-title-en">{sec.label.en}</span>
+            </h2>
+          </header>
+
+          <dl class="dict">
+            {sec.items.map((e) => {
+              const refs = refsMap.get(e.slug) ?? [];
+              return (
+                <div class="row" id={e.slug} data-reveal>
+                  <dt class="dt">
+                    <span class="word">{e.data.word}</span>
+                    {e.data.reading && <span class="reading mono">{e.data.reading}</span>}
+                    {e.data.partOfSpeech && (
+                      <span class="pos mono meta-dim">{e.data.partOfSpeech}</span>
+                    )}
+                  </dt>
+                  <dd class="dd">
+                    <p class="gloss">
+                      <span class="gloss-jp">{e.data.gloss}</span>
+                    </p>
+                    {e.data.definition && <p class="defn">{e.data.definition}</p>}
+                    {e.data.etymology && (
+                      <p class="etym">
+                        <span class="mono meta-dim">ETYM</span>
+                        <span>{e.data.etymology}</span>
+                      </p>
+                    )}
+                    {refs.length > 0 && (
+                      <p class="see">
+                        <span class="mono meta-dim">→</span>
+                        {refs.map((r: any, i: number) => (
+                          <>
+                            {i > 0 && <span class="meta-dim"> · </span>}
+                            <a class="see-link" href={`#${r.slug}`}>
+                              {r.data.word}
+                            </a>
+                          </>
+                        ))}
+                      </p>
+                    )}
+                    {(e.data.mondoRefs ?? []).length > 0 && (
+                      <p class="see">
+                        <span class="mono meta-dim">⇒ MONDO</span>
+                        {(e.data.mondoRefs ?? []).map((slug: string, i: number) => (
+                          <>
+                            {i > 0 && <span class="meta-dim"> · </span>}
+                            <a class="see-link" href={`${base}/mondo/${slug}/`}>
+                              {slug}
+                            </a>
+                          </>
+                        ))}
+                      </p>
+                    )}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </article>
+      ))
+    }
+
+    <div class="rule"></div>
+
+    <nav class="foot-nav" data-reveal>
+      <a class="foot-link" href={`${base}/mondo/`}>
+        <span class="mono meta-dim">← PREV ·</span> <span class="foot-l">MONDO-DI NOTA</span>{' '}
+        <span class="jp">世界注</span>
+      </a>
+    </nav>
+  </section>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .section-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.32em;
+    letter-spacing: 0.25em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .lede {
+    max-width: var(--max-reading);
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    color: var(--color-ink-muted);
+  }
+  .cat-nav {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+  }
+  .cat-chip {
+    display: inline-flex;
+    gap: 0.5em;
+    align-items: baseline;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .cat-chip:hover {
+    border-bottom-color: var(--color-acid);
+  }
+  .cat-jp {
+    font-family: var(--font-mincho);
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+  }
+  .cat-ct {
+    font-size: 0.625rem;
+  }
+  .cat + .cat {
+    margin-top: var(--space-10);
+  }
+  .cat-head {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-top: 1px solid var(--color-acid-dim);
+    border-bottom: 1px solid var(--color-rule);
+    scroll-margin-top: 80px;
+  }
+  .cat-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin: 0;
+  }
+  .cat-title-jp {
+    font-family: var(--font-mincho);
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+    letter-spacing: 0.3em;
+    font-weight: 500;
+  }
+  .cat-title-en {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.18em;
+  }
+  .dict {
+    display: grid;
+    margin: 0;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 14rem 1fr;
+    gap: var(--space-8);
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--color-rule);
+    scroll-margin-top: 80px;
+  }
+  .row:target {
+    background: color-mix(in srgb, var(--color-bg) 90%, var(--color-acid) 10%);
+  }
+  .row:target .word {
+    color: var(--color-acid);
+  }
+  .dt {
+    display: grid;
+    gap: var(--space-1);
+    align-content: start;
+  }
+  .word {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: var(--color-ink);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .reading {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+  }
+  .pos {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.08em;
+    font-style: italic;
+  }
+  .dd {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  .gloss-jp {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    color: var(--color-ink);
+  }
+  .defn {
+    font-family: var(--font-mincho);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--color-ink-muted);
+    max-width: 60ch;
+  }
+  .etym,
+  .see {
+    display: flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    font-family: var(--font-mincho);
+    font-size: 0.85rem;
+    color: var(--color-ink-muted);
+    align-items: baseline;
+  }
+  .etym > .mono,
+  .see > .mono {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+  }
+  .see-link {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .see-link:hover {
+    border-bottom-color: var(--color-acid);
+    color: var(--color-acid);
+  }
+
+  @media (max-width: 48rem) {
+    .row {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+  }
+  .foot-nav {
+    padding-top: var(--space-4);
+  }
+  .foot-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+  }
+  .foot-l {
+    color: var(--color-acid);
+  }
+  .foot-link .jp {
+    font-family: var(--font-mincho);
+    color: var(--color-ink-muted);
+    letter-spacing: 0.2em;
+  }
+</style>

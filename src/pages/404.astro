@@ -24,6 +24,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     font-size: clamp(3rem, 12vw, 8rem);
     letter-spacing: -0.03em;
     line-height: 0.9;
+    position: relative;
+    animation: glitch 4s infinite;
+  }
+  @keyframes glitch {
+    0%, 92%, 100% { transform: none; clip-path: none; }
+    93% { transform: translate(-2px, 1px); clip-path: inset(20% 0 60% 0); }
+    94% { transform: translate(2px, -1px); clip-path: inset(50% 0 20% 0); }
+    95% { transform: translate(-1px, 0); clip-path: none; }
+    96% { transform: translate(1px, 1px); clip-path: inset(30% 0 40% 0); }
+    97% { transform: none; clip-path: none; }
   }
   .nf-jp {
     font-family: var(--font-mincho);
