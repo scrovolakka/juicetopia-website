@@ -1,6 +1,7 @@
 ---
 name: グリッボロンカ
 reading: ぐりっぼろんか
+portrait: ../../assets/characters/010-portrait.svg
 charId: C.010
 order: 5
 faction: 王のフルーツ

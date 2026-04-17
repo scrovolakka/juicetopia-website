@@ -1,6 +1,7 @@
 ---
 name: サクラベリックス
 reading: さくらべりっくす
+portrait: ../../assets/characters/013-portrait.svg
 charId: C.013
 order: 2
 faction: ミューズ

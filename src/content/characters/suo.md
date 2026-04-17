@@ -1,6 +1,7 @@
 ---
 name: スオ・カンジ
 reading: すお・かんじ
+portrait: ../../assets/characters/014-portrait.svg
 charId: C.014
 order: 1
 faction: 大坂

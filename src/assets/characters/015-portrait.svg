@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Peach leaf -->
+    <path d="M262 96 Q284 82 300 96 Q292 112 272 110" stroke-width="0.8"/>
+    <!-- Peach body with cleft -->
+    <path d="M240 120 Q118 140 128 262 Q140 370 240 370 Q340 370 352 262 Q362 140 240 120 Z"/>
+    <!-- Cleft line -->
+    <path d="M240 134 Q224 250 240 368" stroke-width="0.8"/>
+    <!-- Flowing ponytail — a continuous curve trailing to the lower-left -->
+    <path d="M192 132 Q110 164 74 268 Q66 348 118 402"/>
+    <!-- Ponytail hair strands (secondary) -->
+    <path d="M188 140 Q118 176 88 280 Q84 352 126 394" stroke-width="0.6"/>
+    <path d="M200 132 Q132 156 96 260 Q92 344 134 392" stroke-width="0.6"/>
+    <!-- Ponytail band -->
+    <ellipse cx="200" cy="152" rx="18" ry="6" stroke-width="0.8"/>
+  </g>
+  <circle cx="292" cy="100" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.015</text>
+</svg>

@@ -1,6 +1,7 @@
 ---
 name: ポンプリーズカ
 reading: ぽんぷりーずか
+portrait: ../../assets/characters/009-portrait.svg
 charId: C.009
 order: 4
 faction: 王のフルーツ

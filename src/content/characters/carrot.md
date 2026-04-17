@@ -1,6 +1,7 @@
 ---
 name: キャロット
 reading: きゃろっと
+portrait: ../../assets/characters/012-portrait.svg
 charId: C.012
 order: 1
 faction: ミューズ

@@ -1,6 +1,7 @@
 ---
 name: モルドラッサ
 reading: もるどらっさ
+portrait: ../../assets/characters/011-portrait.svg
 charId: C.011
 order: 6
 faction: 王のフルーツ

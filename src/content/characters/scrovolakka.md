@@ -1,6 +1,7 @@
 ---
 name: スクロヴロッカ
 reading: すくろゔろっか
+portrait: ../../assets/characters/008-portrait.svg
 charId: C.008
 order: 3
 faction: 王のフルーツ

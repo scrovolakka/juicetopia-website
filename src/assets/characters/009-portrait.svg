@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Horizontal beam (梁) -->
+    <line x1="72" y1="80" x2="408" y2="80"/>
+    <!-- Strings descending at varying angles -->
+    <line x1="120" y1="80" x2="140" y2="220" stroke-width="0.7"/>
+    <line x1="200" y1="80" x2="220" y2="180" stroke-width="0.7"/>
+    <line x1="280" y1="80" x2="260" y2="180" stroke-width="0.7"/>
+    <line x1="360" y1="80" x2="340" y2="220" stroke-width="0.7"/>
+    <!-- Tomato body -->
+    <circle cx="240" cy="300" r="84"/>
+    <!-- Tomato stem -->
+    <line x1="240" y1="216" x2="240" y2="240"/>
+    <path d="M218 232 L240 242 L262 232" stroke-width="0.8"/>
+    <path d="M212 240 L240 248 L268 240" stroke-width="0.8"/>
+    <!-- Inner curve suggesting skin -->
+    <path d="M176 300 Q240 264 304 300" stroke-width="0.5"/>
+  </g>
+  <!-- Knots on strings -->
+  <g fill="#6b6a63">
+    <circle cx="140" cy="220" r="2.5"/>
+    <circle cx="220" cy="180" r="2.5"/>
+    <circle cx="260" cy="180" r="2.5"/>
+    <circle cx="340" cy="220" r="2.5"/>
+  </g>
+  <circle cx="240" cy="300" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.009</text>
+</svg>

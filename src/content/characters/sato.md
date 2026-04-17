@@ -1,6 +1,7 @@
 ---
 name: サトー
 reading: さとー
+portrait: ../../assets/characters/015-portrait.svg
 charId: C.015
 order: 2
 faction: 大坂

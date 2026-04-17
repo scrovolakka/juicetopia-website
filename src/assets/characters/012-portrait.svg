@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Muse's tiara (three small prongs) -->
+    <path d="M194 98 L212 62 L232 96 L240 68 L248 96 L268 62 L286 98"/>
+    <line x1="194" y1="98" x2="286" y2="98" stroke-width="0.8"/>
+    <!-- Carrot leaves -->
+    <path d="M216 120 Q206 88 198 108" stroke-width="0.8"/>
+    <path d="M240 120 Q240 82 248 106" stroke-width="0.8"/>
+    <path d="M264 120 Q274 88 282 108" stroke-width="0.8"/>
+    <!-- Carrot body (inverted triangle, wide shoulders narrowing to point) -->
+    <path d="M192 148 Q196 160 240 150 Q284 160 288 148 L240 404 Z"/>
+    <!-- Horizontal striations -->
+    <path d="M214 204 Q240 196 266 204" stroke-width="0.6"/>
+    <path d="M222 256 Q240 250 258 256" stroke-width="0.6"/>
+    <path d="M230 308 Q240 304 250 308" stroke-width="0.6"/>
+    <path d="M235 356 Q240 354 245 356" stroke-width="0.6"/>
+  </g>
+  <circle cx="240" cy="150" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.012</text>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Stem -->
+    <path d="M240 80 L240 138"/>
+    <!-- Two leaves at the stem's head -->
+    <path d="M240 100 Q208 92 202 70 Q220 76 236 94" stroke-width="0.8"/>
+    <path d="M240 100 Q272 92 278 70 Q260 76 244 94" stroke-width="0.8"/>
+    <!-- Grape cluster — triangular arrangement, 9 grapes -->
+    <circle cx="240" cy="162" r="22"/>
+    <circle cx="214" cy="198" r="22"/>
+    <circle cx="266" cy="198" r="22"/>
+    <circle cx="188" cy="234" r="22"/>
+    <circle cx="240" cy="234" r="22"/>
+    <circle cx="292" cy="234" r="22"/>
+    <circle cx="214" cy="270" r="22"/>
+    <circle cx="266" cy="270" r="22"/>
+    <circle cx="240" cy="306" r="22"/>
+  </g>
+  <!-- Fallen seeds below the cluster -->
+  <g fill="#6b6a63">
+    <circle cx="204" cy="364" r="2"/>
+    <circle cx="230" cy="372" r="2"/>
+    <circle cx="252" cy="378" r="2"/>
+    <circle cx="276" cy="366" r="2"/>
+    <circle cx="220" cy="392" r="2"/>
+    <circle cx="248" cy="400" r="2"/>
+    <circle cx="266" cy="394" r="2"/>
+  </g>
+  <circle cx="240" cy="234" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.010</text>
+</svg>

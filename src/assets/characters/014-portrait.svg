@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Antennae -->
+    <path d="M218 146 Q190 98 170 82" stroke-width="0.8"/>
+    <path d="M262 146 Q290 98 310 82" stroke-width="0.8"/>
+    <!-- Beetle carapace / rounded shield head -->
+    <path d="M160 170 Q160 138 240 138 Q320 138 320 170 L320 268 Q320 314 240 320 Q160 314 160 268 Z"/>
+    <!-- Central ridge line (elytra split) -->
+    <line x1="240" y1="138" x2="240" y2="320" stroke-width="0.6"/>
+    <!-- Compound eyes -->
+    <circle cx="204" cy="200" r="18"/>
+    <circle cx="276" cy="200" r="18"/>
+    <!-- Eye facet hatching -->
+    <line x1="190" y1="192" x2="218" y2="208" stroke-width="0.5"/>
+    <line x1="218" y1="192" x2="190" y2="208" stroke-width="0.5"/>
+    <line x1="262" y1="192" x2="290" y2="208" stroke-width="0.5"/>
+    <line x1="290" y1="192" x2="262" y2="208" stroke-width="0.5"/>
+    <!-- Mandibles -->
+    <path d="M226 276 L220 294 L238 284" stroke-width="0.8"/>
+    <path d="M254 276 L260 294 L242 284" stroke-width="0.8"/>
+    <!-- Price tag hanging to the right -->
+    <path d="M344 356 L402 356 L416 376 L402 396 L344 396 Z" stroke-width="0.8"/>
+    <circle cx="354" cy="376" r="3" stroke-width="0.6"/>
+    <line x1="368" y1="370" x2="400" y2="370" stroke-width="0.5"/>
+    <line x1="368" y1="382" x2="392" y2="382" stroke-width="0.5"/>
+    <!-- Tag string -->
+    <line x1="320" y1="350" x2="344" y2="366" stroke-width="0.5"/>
+  </g>
+  <circle cx="240" cy="200" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.014</text>
+</svg>

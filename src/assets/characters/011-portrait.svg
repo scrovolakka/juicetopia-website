@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <rect width="480" height="480" fill="#EFEBE2"/>
+  <g stroke="#0F0E0C" stroke-width="1.2" fill="none">
+    <!-- Stem -->
+    <line x1="240" y1="110" x2="240" y2="144"/>
+    <!-- Leaf -->
+    <path d="M240 128 Q274 116 284 138 Q258 142 240 146" stroke-width="0.8"/>
+    <!-- Apple body — two curves meeting at a top dimple -->
+    <path d="M240 146 Q134 150 134 252 Q134 346 240 346 Q346 346 346 252 Q346 150 240 146 Z"/>
+    <!-- Apple cleft / central vertical highlight -->
+    <path d="M240 162 Q244 200 242 252" stroke-width="0.6"/>
+    <!-- Cooking-surface horizontal -->
+    <line x1="96" y1="398" x2="384" y2="398"/>
+    <!-- Support legs -->
+    <line x1="124" y1="398" x2="124" y2="416" stroke-width="0.8"/>
+    <line x1="356" y1="398" x2="356" y2="416" stroke-width="0.8"/>
+    <!-- Rising steam -->
+    <path d="M184 390 Q180 372 188 358 Q196 372 190 386" stroke-width="0.6"/>
+    <path d="M236 388 Q232 366 240 350 Q248 366 242 384" stroke-width="0.6"/>
+    <path d="M296 390 Q292 374 300 362 Q308 374 302 386" stroke-width="0.6"/>
+  </g>
+  <circle cx="240" cy="250" r="3" fill="#D8FF3A"/>
+  <text x="20" y="460" font-family="monospace" font-size="11" fill="#6b6a63" letter-spacing="3">C.011</text>
+</svg>

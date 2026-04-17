@@ -1,6 +1,7 @@
 ---
 name: ジジバルバ
 reading: じじばるば
+portrait: ../../assets/characters/007-portrait.svg
 charId: C.007
 order: 2
 faction: 王のフルーツ
