@@ -2,6 +2,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
+import { buildBlogPostingNode, buildBreadcrumbNode } from '~/lib/jsonld';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const all = await getCollection('cronika');
@@ -23,6 +24,30 @@ const kindMap: Record<string, { jp: string; en: string }> = {
 
 // Use the most recent entry's hero image (if any) as the page-level OG image.
 const latestHero = entries.find((e) => e.entry.data.heroImage);
+
+// --- JSON-LD: every entry as BlogPosting + Breadcrumb -------------------
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.pathname;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const siteUrl = Astro.site
+  ? new URL(`${base}/`, Astro.site).toString()
+  : `${base}/`;
+
+const jsonLdNodes = [
+  ...entries.map((e) =>
+    buildBlogPostingNode({
+      url: `${canonicalUrl}#${e.entry.slug}`,
+      headline: e.entry.data.title,
+      datePublished: e.entry.data.loggedAt.toISOString().slice(0, 10),
+      siteOrigin,
+    }),
+  ),
+  buildBreadcrumbNode([
+    { name: 'juicetopia', url: siteUrl },
+    { name: '編集後記', url: canonicalUrl },
+  ]),
+];
 ---
 
 <BaseLayout
@@ -31,6 +56,7 @@ const latestHero = entries.find((e) => e.entry.data.heroImage);
   mode="bone"
   ogImage={latestHero?.entry.data.heroImage}
   ogImageAlt={latestHero?.entry.data.heroAlt ?? latestHero?.entry.data.title}
+  jsonLdNodes={jsonLdNodes}
 >
   <section class="cronika page-column flow-16">
     <header class="flow" data-reveal>

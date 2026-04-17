@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
+import { absoluteUrl, buildCharacterNode, buildBreadcrumbNode } from '~/lib/jsonld';
 
 export async function getStaticPaths() {
   const all = await getCollection('characters');
@@ -44,6 +45,42 @@ const siblings = all
   .sort((a, b) => a.data.order - b.data.order);
 
 const pad = (n: number) => String(n).padStart(2, '0');
+
+// --- JSON-LD: Person + FictionalCharacter + Breadcrumb ------------------
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.pathname;
+const charactersIndexUrl = Astro.site
+  ? new URL(`${base}/characters/`, Astro.site).toString()
+  : `${base}/characters/`;
+const siteUrl = Astro.site
+  ? new URL(`${base}/`, Astro.site).toString()
+  : `${base}/`;
+
+let portraitUrl: string | undefined;
+if (entry.data.portrait) {
+  const processed = await getImage({ src: entry.data.portrait, width: 640, height: 640 });
+  portraitUrl = absoluteUrl(processed.src, Astro.site);
+}
+
+const alternateNames = [entry.data.reading, entry.data.charId].filter(Boolean) as string[];
+
+const jsonLdNodes = [
+  buildCharacterNode({
+    url: canonicalUrl,
+    name: entry.data.name,
+    alternateNames,
+    description: entry.data.tagline,
+    imageUrl: portraitUrl,
+    faction: entry.data.faction,
+    role: entry.data.role,
+  }),
+  buildBreadcrumbNode([
+    { name: 'juicetopia', url: siteUrl },
+    { name: '登場人物', url: charactersIndexUrl },
+    { name: entry.data.name, url: canonicalUrl },
+  ]),
+];
 ---
 
 <BaseLayout
@@ -52,6 +89,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   mode="bone"
   ogImage={entry.data.portrait}
   ogImageAlt={entry.data.name}
+  jsonLdNodes={jsonLdNodes}
 >
   <article class="char-detail page-column" data-reveal>
     <header class="head">
@@ -198,7 +236,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   }
   .meta .sep {
     margin-inline: 0.4em;
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
   .title {
     font-family: var(--font-display);
@@ -223,7 +261,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .role {
     font-size: var(--fs-meta);
     letter-spacing: 0.18em;
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
   .tagline {
     font-family: var(--font-mincho);
@@ -402,6 +440,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
     color: var(--color-ink-muted);
   }
   .entry-nav a:hover {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
 </style>

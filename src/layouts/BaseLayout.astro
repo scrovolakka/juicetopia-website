@@ -8,6 +8,11 @@ import SiteHeader from '~/components/SiteHeader.astro';
 import SiteFooter from '~/components/SiteFooter.astro';
 import RouteIndex from '~/components/RouteIndex.astro';
 import { modeFor, routeIndex } from '~/lib/nav';
+import {
+  buildPublisherNode,
+  buildWebSiteNode,
+  toJsonLdGraph,
+} from '~/lib/jsonld';
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
@@ -22,6 +27,11 @@ interface Props {
    */
   ogImage?: ImageMetadata;
   ogImageAlt?: string;
+  /**
+   * Additional JSON-LD nodes to be merged into the per-page @graph alongside
+   * the site-wide WebSite/Publisher pair. Use helpers in `~/lib/jsonld.ts`.
+   */
+  jsonLdNodes?: Array<Record<string, unknown>>;
 }
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -34,6 +44,7 @@ const {
   showRouteIndex = true,
   ogImage,
   ogImageAlt,
+  jsonLdNodes = [],
 } = Astro.props;
 
 const pageTitle = title ? `${title} — juicetopia` : 'juicetopia';
@@ -61,6 +72,18 @@ if (ogImage) {
   ogImageWidth = processed.attributes.width ?? 1200;
   ogImageHeight = processed.attributes.height ?? 630;
 }
+
+// JSON-LD @graph: site-wide WebSite + Publisher are always present; per-page
+// additions (Article, DefinedTerm, BreadcrumbList, etc.) come in via props.
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const siteUrl = Astro.site
+  ? new URL(import.meta.env.BASE_URL, Astro.site).toString()
+  : '';
+const jsonLd = toJsonLdGraph([
+  buildWebSiteNode(siteOrigin, siteUrl),
+  buildPublisherNode(siteOrigin),
+  ...jsonLdNodes,
+]);
 ---
 
 <!doctype html>
@@ -103,15 +126,18 @@ if (ogImage) {
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={desc} />
     <meta name="generator" content={Astro.generator} />
+
+    <script type="application/ld+json" set:html={jsonLd} />
   </head>
   <body style={`--grain-url: url('${grainHref}');`}>
+    <a class="skip-link" href="#main">スキップして本文へ</a>
     <div class="fx-scanlines" aria-hidden="true"></div>
     <div class="fx-grain" aria-hidden="true"></div>
     <div id="fx-sweep" class="fx-sweep" aria-hidden="true"></div>
 
     <SiteHeader />
 
-    <main class="page page-fade">
+    <main id="main" class="page page-fade">
       {
         showRouteIndex && current && (
           <div class="page-column route-head">

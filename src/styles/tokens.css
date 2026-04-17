@@ -12,6 +12,10 @@
   --color-rule: rgba(15, 14, 12, 0.12);
   --color-rule-strong: rgba(15, 14, 12, 0.28);
   --scanline-ink: 15, 14, 12;
+  /* Text-safe variant of acid — dark olive on bone so text hits ~7:1 contrast.
+     Decorative `--color-acid` is used for dots/borders/underlines (WCAG-exempt).
+     This token replaces acid ONLY when the acid is carrying text. */
+  --color-acid-ink: #5e7b00;
 }
 
 [data-mode='void'] {
@@ -21,6 +25,8 @@
   --color-rule: rgba(239, 235, 226, 0.15);
   --color-rule-strong: rgba(239, 235, 226, 0.32);
   --scanline-ink: 239, 235, 226;
+  /* On void the bright acid already hits 17:1 on bg — keep it as the text color. */
+  --color-acid-ink: #d8ff3a;
 }
 
 :root {

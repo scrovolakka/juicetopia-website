@@ -2,6 +2,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { getCollection, getEntry } from 'astro:content';
 import { Image } from 'astro:assets';
+import { buildDefinedTermNode, buildBreadcrumbNode } from '~/lib/jsonld';
 
 export async function getStaticPaths() {
   const all = await getCollection('codex');
@@ -27,6 +28,34 @@ const relatedCodex = await Promise.all(
 // For now we don't have mondoRefs on novel, but we collect characters' mondoRefs.
 const characters = await getCollection('characters');
 const relatedChars = characters.filter((c) => (c.data.mondoRefs ?? []).includes(entry.slug));
+
+// --- JSON-LD: DefinedTerm + Breadcrumb ----------------------------------
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.pathname;
+const mondoIndexUrl = Astro.site
+  ? new URL(`${base}/mondo/`, Astro.site).toString()
+  : `${base}/mondo/`;
+const siteUrl = Astro.site
+  ? new URL(`${base}/`, Astro.site).toString()
+  : `${base}/`;
+
+const jsonLdNodes = [
+  buildDefinedTermNode({
+    url: canonicalUrl,
+    name: entry.data.title,
+    alternateName: entry.data.label,
+    description: entry.data.summary,
+    termCode: entry.data.codexId,
+    inSetName: 'MONDO-DI NOTA',
+    inSetUrl: mondoIndexUrl,
+  }),
+  buildBreadcrumbNode([
+    { name: 'juicetopia', url: siteUrl },
+    { name: '世界注', url: mondoIndexUrl },
+    { name: entry.data.title, url: canonicalUrl },
+  ]),
+];
 ---
 
 <BaseLayout
@@ -35,6 +64,7 @@ const relatedChars = characters.filter((c) => (c.data.mondoRefs ?? []).includes(
   mode="bone"
   ogImage={entry.data.heroImage}
   ogImageAlt={entry.data.heroAlt ?? entry.data.title}
+  jsonLdNodes={jsonLdNodes}
 >
   <article class="codex-entry page-column" data-reveal>
     <header class="head">
@@ -155,7 +185,7 @@ const relatedChars = characters.filter((c) => (c.data.mondoRefs ?? []).includes(
     gap: var(--space-3);
   }
   .head .sep {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
     margin-inline: 0.4em;
   }
   .title {
@@ -276,6 +306,6 @@ const relatedChars = characters.filter((c) => (c.data.mondoRefs ?? []).includes(
     color: var(--color-ink-muted);
   }
   .entry-nav a:hover {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
 </style>

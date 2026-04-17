@@ -1,8 +1,13 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import WritingModeToggle from '~/components/WritingModeToggle.astro';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import {
+  absoluteUrl,
+  buildArticleNode,
+  buildBreadcrumbNode,
+} from '~/lib/jsonld';
 
 interface Props {
   title: string;
@@ -53,6 +58,45 @@ const seriesSlug = (() => {
   }
 })();
 const marginalia = seriesSlug === 'footnote-king' ? 'on' : 'off';
+
+// Build JSON-LD for this chapter. Article + Breadcrumb cover search indexing
+// and rich-results eligibility. Hero image (if present) becomes og:image
+// and also the Article.image property.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.pathname;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const siteUrl = Astro.site ? new URL(base + '/', Astro.site).toString() : '';
+const novelIndexUrl = Astro.site
+  ? new URL(`${base}/novel/`, Astro.site).toString()
+  : `${base}/novel/`;
+
+let articleImageUrl: string | undefined;
+if (heroImage) {
+  const processed = await getImage({ src: heroImage, width: 1200, height: 630, format: 'jpg' });
+  articleImageUrl = absoluteUrl(processed.src, Astro.site);
+}
+
+const jsonLdNodes = [
+  buildArticleNode({
+    url: canonicalUrl,
+    headline: title,
+    description,
+    datePublished: publishedAt.toISOString().slice(0, 10),
+    articleSection: series,
+    imageUrl: articleImageUrl,
+    siteOrigin,
+  }),
+  buildBreadcrumbNode([
+    { name: 'juicetopia', url: siteUrl || canonicalUrl },
+    { name: '小説', url: novelIndexUrl },
+    ...(series
+      ? [{ name: series, url: novelIndexUrl }]
+      : []),
+    { name: title, url: canonicalUrl },
+  ]),
+];
 ---
 
 <BaseLayout
@@ -62,6 +106,7 @@ const marginalia = seriesSlug === 'footnote-king' ? 'on' : 'off';
   showRouteIndex={false}
   ogImage={heroImage}
   ogImageAlt={heroAlt ?? title}
+  jsonLdNodes={jsonLdNodes}
 >
   <article
     class="reading"
@@ -159,7 +204,7 @@ const marginalia = seriesSlug === 'footnote-king' ? 'on' : 'off';
     color: var(--color-ink-muted);
   }
   .rail .acid {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
   @media (max-width: 60rem) {
     .rail {
@@ -233,7 +278,7 @@ const marginalia = seriesSlug === 'footnote-king' ? 'on' : 'off';
   }
   .scroll-anchor:hover,
   .scroll-anchor:focus-visible {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
   [data-writing='vertical'] .scroll-anchor {
     display: none;

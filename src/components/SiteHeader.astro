@@ -82,6 +82,10 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
   const burger = document.getElementById('burger');
   const drawer = document.getElementById('drawer');
   if (burger && drawer) {
+    const closeDrawer = () => {
+      drawer.setAttribute('aria-hidden', 'true');
+      burger.setAttribute('aria-expanded', 'false');
+    };
     burger.addEventListener('click', () => {
       const open = drawer.getAttribute('aria-hidden') === 'false';
       drawer.setAttribute('aria-hidden', String(open));
@@ -89,10 +93,16 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     });
     // Close on link click
     drawer.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('click', () => {
-        drawer.setAttribute('aria-hidden', 'true');
-        burger.setAttribute('aria-expanded', 'false');
-      });
+      a.addEventListener('click', closeDrawer);
+    });
+    // Close on Escape — keyboard accessibility. Returns focus to the burger.
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (drawer.getAttribute('aria-hidden') === 'false') {
+        ev.preventDefault();
+        closeDrawer();
+        burger.focus();
+      }
     });
   }
 
@@ -158,7 +168,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     transition: color var(--dur-fast) var(--ease-out);
   }
   .nav-link .n {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
     font-weight: 500;
   }
   .nav-link:hover,
@@ -223,7 +233,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     white-space: nowrap;
   }
   .right .sep {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
 
   .rule {
@@ -261,11 +271,11 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     background: color-mix(in srgb, var(--color-bg) 88%, var(--color-acid) 12%);
   }
   .drawer-link .n {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
     font-weight: 500;
   }
   .drawer-link.is-current .l {
-    color: var(--color-acid);
+    color: var(--color-acid-ink);
   }
 
   @media (max-width: 48rem) {
