@@ -6,6 +6,8 @@ series: "泥の断章"
 seriesOrder: 3
 summary: "事案番号の下で物理は黙り、書類だけが残る。"
 indent: false
+heroImage: ../../../assets/img/rectangle_large_type_2_86b15a12519a6c308a9bfcaf3974eef0.webp
+heroAspect: "16:9"
 ---
 
 | 項目 | 内容 |

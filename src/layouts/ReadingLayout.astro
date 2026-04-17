@@ -166,6 +166,7 @@ const jsonLdNodes = [
 <script>
   import { initVerticalScroll } from '~/scripts/vertical-scroll';
   import '~/scripts/marginalia';
+  import '~/scripts/vertical-parallax';
   const el = document.getElementById('body-scroll');
   if (el) initVerticalScroll(el);
 
@@ -351,6 +352,12 @@ const jsonLdNodes = [
   [data-indent='false'][data-writing='vertical'] .body :global(p) {
     text-indent: 0;
   }
+  /* Japanese typesetting rule — paragraphs that open with a bracket
+     (「『( tagged via remark-no-indent as data-no-indent) don't take
+     the 1em indent, because the bracket glyph itself carries visual lead-in. */
+  [data-writing='vertical'] .body :global(p[data-no-indent]) {
+    text-indent: 0;
+  }
 
   [data-writing='vertical'] .body :global(p:first-child) {
     margin-top: 0;
@@ -426,18 +433,35 @@ const jsonLdNodes = [
     color: var(--color-ink-muted);
   }
 
-  /* Quote figure (blockquote with caption) */
+  /* Blockquote (引用) — acid accent line on every `> text` block, whether
+     or not it has a `——` caption. The caption form (remark-blockquote-caption
+     wraps it in <figure class="quote-figure">) just adds the figcaption
+     styling on top of this shared base. */
+  .body :global(blockquote) {
+    margin-block: 2em;
+    padding-left: 1em;
+    border-left: 2px solid var(--color-acid);
+  }
+  .body :global(blockquote p) {
+    text-indent: 0;
+    /* Preserve source line breaks — writers use stacked `> line` rows as
+       poetic enumeration, not as a single reflowed paragraph. Consecutive
+       spaces still collapse to one.
+       NOTE: applied to the <p> rather than the <blockquote> so that the
+       markdown-emitted whitespace between <blockquote> and <p> (which would
+       otherwise render as blank leading/trailing rows in vertical mode)
+       stays collapsed. */
+    white-space: pre-line;
+  }
+
+  /* Figure wrapper for the `——` caption form. Let the figure own the outer
+     margin so the inner blockquote hugs tight to the caption below. */
   .body :global(.quote-figure) {
     margin-block: 2em;
     padding: 0;
   }
   .body :global(.quote-figure blockquote) {
     margin: 0;
-    padding-left: 1em;
-    border-left: 2px solid var(--color-acid);
-  }
-  .body :global(.quote-figure blockquote p) {
-    text-indent: 0;
   }
   .body :global(.quote-figure figcaption) {
     margin-top: 0.75em;
@@ -453,9 +477,10 @@ const jsonLdNodes = [
     margin: 0;
   }
 
-  /* Quote figure — vertical mode. In tategaki the "start" of each line is
-     the top, so the accent sits above the quote. */
-  [data-writing='vertical'] .body :global(.quote-figure blockquote) {
+  /* Vertical mode — in tategaki the "start of the line" is the TOP edge,
+     so the acid accent moves from left to top. Applies to every blockquote,
+     captioned or plain. */
+  [data-writing='vertical'] .body :global(blockquote) {
     border-left: none;
     border-top: 2px solid var(--color-acid);
     padding-left: 0;

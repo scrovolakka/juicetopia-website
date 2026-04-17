@@ -5,6 +5,8 @@ publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 7
 summary: "芸とは、操られうる余白を先に見つけることである。"
+heroImage: ../../../assets/img/rectangle_large_type_2_fe50218c45255ec3c7b954c8b3d993d3.webp
+heroAspect: "16:9"
 ---
 
 > 支配の芸は、操ることより、操られうる余白を読むことに尽きる。

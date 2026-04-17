@@ -1,0 +1,37 @@
+---
+// Fruit backdrop — a full-viewport Three.js canvas that holds a slowly drifting
+// wireframe fruit behind the content of a route's index page. The script
+// reads `data-fruit` to decide which geometry to build.
+export interface Props {
+  fruit: 'pineapple' | 'banana' | 'apple' | 'grape' | 'tomato';
+}
+const { fruit } = Astro.props;
+---
+
+<canvas class="fruit-backdrop" data-fruit={fruit} aria-hidden="true"></canvas>
+
+<script>
+  import { initFruitBackdrop, type FruitName } from '~/scripts/fruit-backdrop';
+  const canvas = document.querySelector<HTMLCanvasElement>('canvas.fruit-backdrop');
+  const fruit = canvas?.dataset.fruit as FruitName | undefined;
+  if (canvas && fruit) {
+    const start = () => initFruitBackdrop(canvas, fruit);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(start, { timeout: 1500 });
+    } else {
+      setTimeout(start, 200);
+    }
+  }
+</script>
+
+<style>
+  .fruit-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    /* Content reads above via the `.page { z-index: 1 }` rule in base.css. */
+  }
+</style>

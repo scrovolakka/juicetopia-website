@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import FruitBackdrop from '~/components/FruitBackdrop.astro';
 import { getCollection, getEntry } from 'astro:content';
 import { buildDefinedTermSetNode, buildBreadcrumbNode } from '~/lib/jsonld';
 
@@ -80,6 +81,7 @@ const jsonLdNodes = [
   mode="bone"
   jsonLdNodes={jsonLdNodes}
 >
+  <FruitBackdrop fruit="grape" />
   <section class="leksiko page-column flow-16">
     <header class="flow" data-reveal>
       <h1 class="section-title">

@@ -224,6 +224,15 @@ button:focus-visible,
 .page {
   padding-inline: var(--page-pad);
   padding-block: var(--space-section) var(--space-16);
+  /* Ensure content stacks above the <FruitBackdrop> canvas (z-index: 0 fixed).
+     Without this, the fixed canvas would paint over normal-flow text. */
+  position: relative;
+  z-index: 1;
+}
+/* Footer lives outside .page; lift it above the fruit backdrop too. */
+.site-footer {
+  position: relative;
+  z-index: 1;
 }
 
 /* ============================================================
@@ -302,6 +311,31 @@ article.reading[data-writing='vertical'] > .rule {
   display: none;
 }
 
+/* ============================================================
+   Duotone filter — maps raster content images to the ink/bone ramp.
+   The <svg id="duotone-jct"> is emitted hidden from BaseLayout.
+
+   Scope: reading contexts only (章/世界注/編集後記ヒーロ + 本文中の
+   figure/画像). Gallery pages show their images in full colour since
+   MONTRA-MESA is where the artwork is meant to be viewed as-is.
+   SVGs are excluded so hand-drawn character portraits keep their
+   acid accent dot.
+   ============================================================ */
+.fx-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.chapter-hero img:not([src$='.svg']),
+.codex-hero img:not([src$='.svg']),
+.log-hero img:not([src$='.svg']),
+.body .fig .fig-frame img:not([src$='.svg']),
+.body p > img:not([src$='.svg']) {
+  filter: url(#duotone-jct);
+}
+
 /* Body headings inside reading articles — unify to mincho so ## / ###
    in markdown (sections like 「印」「紙」「歯車」) match the prose voice
    instead of inheriting the site-wide sans h2/h3. */
@@ -347,7 +381,11 @@ article.reading[data-writing='vertical'] > .rule {
   background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
 }
 
-/* Aspect-cropped figures from remark-aspect-image */
+/* Aspect-cropped figures from remark-aspect-image.
+   The base .fig wrapper is a grid (frame + caption). When an aspect class
+   is present (fig-16-9, fig-4-3…), the frame is forced to that ratio and
+   the inner image is cover-cropped. Without an aspect class the image keeps
+   its natural ratio — useful for floated figures at arbitrary sizes. */
 .body .fig {
   margin: 2em 0;
   display: grid;
@@ -363,13 +401,21 @@ article.reading[data-writing='vertical'] > .rule {
 .body .fig-4-3 .fig-frame { aspect-ratio: 4 / 3; }
 .body .fig-3-2 .fig-frame { aspect-ratio: 3 / 2; }
 .body .fig-1-1 .fig-frame { aspect-ratio: 1 / 1; }
+/* Default image: natural ratio, fills width */
 .body .fig .fig-frame img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
   display: block;
   margin: 0;
   border: none;
+}
+/* When an aspect class is present, height-fill + cover crops to ratio */
+.body .fig-16-9 .fig-frame img,
+.body .fig-4-3 .fig-frame img,
+.body .fig-3-2 .fig-frame img,
+.body .fig-1-1 .fig-frame img {
+  height: 100%;
 }
 .body .fig figcaption {
   font-family: var(--font-mono);
@@ -379,6 +425,47 @@ article.reading[data-writing='vertical'] > .rule {
   padding-inline-start: 1em;
   border-inline-start: 1px solid var(--color-acid-dim);
   text-transform: none;
+}
+
+/* ============================================================
+   Horizontal mode — floated figures.
+   `[left]` / `[right]` directives in alt text mark the figure with
+   .fig-left / .fig-right. Float + constrained max-width lets prose
+   wrap around. Every .body p clears by default so floats don't bleed
+   across paragraph breaks; the paragraph IMMEDIATELY after a floated
+   figure has clear: none so it wraps. Effect: only the single
+   paragraph adjacent to the image wraps, subsequent paragraphs start
+   fresh below the float.
+   Vertical mode ignores float (handled by picture-page rules later).
+   ============================================================ */
+article.reading[data-writing='horizontal'] .body .fig.fig-left {
+  float: left;
+  max-width: min(50%, 20rem);
+  margin: 0.3em 1.5em 0.8em 0;
+  shape-outside: margin-box;
+}
+article.reading[data-writing='horizontal'] .body .fig.fig-right {
+  float: right;
+  max-width: min(50%, 20rem);
+  margin: 0.3em 0 0.8em 1.5em;
+  shape-outside: margin-box;
+}
+/* Clear floats at every new paragraph so wrap never leaks. */
+article.reading[data-writing='horizontal'] .body p {
+  clear: both;
+}
+/* …except the paragraph directly following a floated figure, which
+   should wrap around it. */
+article.reading[data-writing='horizontal'] .body .fig-left + p,
+article.reading[data-writing='horizontal'] .body .fig-right + p {
+  clear: none;
+}
+/* Section dividers and headings also clear, for safety. */
+article.reading[data-writing='horizontal'] .body h2,
+article.reading[data-writing='horizontal'] .body h3,
+article.reading[data-writing='horizontal'] .body h4,
+article.reading[data-writing='horizontal'] .body hr {
+  clear: both;
 }
 
 /* ============================================================
@@ -404,12 +491,30 @@ article.reading[data-writing='vertical'] > .rule {
 }
 /* Override the tag-derived aspect — vertical mode forces the
    site-wide vertical ratio so every figure becomes "one column" of
-   horizontal scroll. */
+   horizontal scroll. The frame now acts as a clipping "window" that
+   the source image pans through as the reader scrolls
+   (scripts/vertical-parallax.ts drives translateX on the img). */
 [data-writing='vertical'] .body .fig .fig-frame {
   height: var(--fig-vertical-height);
   width: auto;
   max-width: none;
   aspect-ratio: var(--fig-vertical-ratio);
+  /* Clip the landscape source as it pans; flex-centers the image so
+     the initial position (translateX=0) shows the horizontal middle. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+[data-writing='vertical'] .body .fig .fig-frame img {
+  /* Height-matched to the frame; width follows the natural aspect and
+     extends wider than the frame when the source is landscape. */
+  height: 100%;
+  width: auto;
+  max-width: none;
+  object-fit: fill;
+  flex-shrink: 0;
+  will-change: transform;
 }
 [data-writing='vertical'] .body .fig figcaption {
   max-width: 22em;

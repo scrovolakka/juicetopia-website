@@ -2,28 +2,46 @@ import { visit } from 'unist-util-visit';
 import type { Root, Paragraph, Image } from 'mdast';
 
 /**
- * Remark plugin: inline aspect-ratio figures.
+ * Remark plugin: inline figure directives on markdown images.
  *
- * Transforms a markdown image whose alt text starts with an aspect tag into a
- * <figure> with a cropping frame and an optional caption. Astro's built-in
- * image transform still runs over the inner image node (the mdast `image`
- * node is preserved), so `![...](./local.png)` references remain processed
- * by astro:assets and get width/height/srcset for free.
+ * Transforms a markdown image whose alt text starts with one or more
+ * bracketed directives into a <figure> with a frame and an optional caption.
+ * Astro's built-in image transform still runs over the inner image node,
+ * so `![...](./local.png)` references keep srcset / width / height.
  *
- * Usage in Markdown:
+ * Syntax (tokens inside the single [...] are space-separated, order-free):
  *
- *   ![[16:9] キャプション文](./frame.png)
- *   ![[4:3]](./crop.png)              ← no caption
- *   ![[1:1] square note](./pic.png)
+ *   ![[16:9] キャプション](./frame.png)            centered, 16:9 crop
+ *   ![[4:3]](./crop.png)                              centered, 4:3 crop (no caption)
+ *   ![[left] caption](./img.png)                      float-left, natural ratio
+ *   ![[right] caption](./img.png)                     float-right, natural ratio
+ *   ![[left 16:9] caption](./img.png)                 float-left + 16:9 crop
+ *   ![[right 4:3] caption](./img.png)                 float-right + 4:3 crop
  *
- * Supported tags: [16:9], [4:3], [3:2], [1:1].
+ * Supported aspect tokens: 16:9 | 4:3 | 3:2 | 1:1.
+ * Supported float tokens:  left | right.
  *
- * The image is cropped to the given ratio via `object-fit: cover` on the
- * inner frame. If you want to keep the natural aspect ratio, just don't add
- * the tag — a plain markdown image renders inline without cropping.
+ * In vertical writing mode the float tokens are ignored (picture-page
+ * layout wins). See base.css for the float / clear rules.
  */
 
-const ASPECT_RE = /^\[(16:9|4:3|3:2|1:1)\]\s*([\s\S]*)$/;
+type Aspect = '16:9' | '4:3' | '3:2' | '1:1';
+type Float = 'left' | 'right';
+
+const TAG_RE = /^\[([^\]]+)\]\s*([\s\S]*)$/;
+const ASPECTS = new Set<Aspect>(['16:9', '4:3', '3:2', '1:1']);
+const FLOATS = new Set<Float>(['left', 'right']);
+
+function parseDirectives(raw: string): { float?: Float; aspect?: Aspect } {
+  const tokens = raw.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
+  let float: Float | undefined;
+  let aspect: Aspect | undefined;
+  for (const t of tokens) {
+    if (FLOATS.has(t as Float)) float = t as Float;
+    else if (ASPECTS.has(t as Aspect)) aspect = t as Aspect;
+  }
+  return { float, aspect };
+}
 
 export default function remarkAspectImage() {
   return (tree: Root) => {
@@ -37,15 +55,20 @@ export default function remarkAspectImage() {
 
       const img = child as Image;
       const alt = img.alt ?? '';
-      const match = alt.match(ASPECT_RE);
+      const match = alt.match(TAG_RE);
       if (!match) return;
 
-      const aspect = match[1];
+      const { float, aspect } = parseDirectives(match[1]);
+      // At least one directive is required; otherwise leave as plain image.
+      if (!float && !aspect) return;
+
       const caption = (match[2] ?? '').trim();
-      const cls = `fig fig-${aspect.replace(':', '-')}`;
+      const classes = ['fig'];
+      if (aspect) classes.push(`fig-${aspect.replace(':', '-')}`);
+      if (float) classes.push(`fig-${float}`);
+      const cls = classes.join(' ');
 
       // Rewrite alt to remove the tag so assistive tech reads the caption only
-      // (or falls back to a sensible placeholder if none).
       img.alt = caption || '';
 
       const replacement: any[] = [];

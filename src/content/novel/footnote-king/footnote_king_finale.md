@@ -5,6 +5,8 @@ publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 10
 summary: "玉座に座るのは王ではなく、王を要約した紙である。"
+heroImage: ../../../assets/img/rectangle_large_type_2_3b842efea987aba6bf8ad12c9a92bc02.webp
+heroAspect: "16:9"
 ---
 
 朝が来て、椅子は空のまま、様式だけが座っていた。[^1]
