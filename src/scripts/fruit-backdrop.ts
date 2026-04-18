@@ -19,16 +19,27 @@ import * as THREE from 'three';
 export type FruitName = 'pineapple' | 'banana' | 'apple' | 'grape' | 'tomato';
 
 // -----------------------------------------------------------------------------
-// Shared wireframe material — mode-aware color so the fruit reads on both
-// bone (paper) and void (dark) pages.
+// Shared wireframe material.
+//
+// First-time visitors see the fruit drawn in the site's neutral ink/bone
+// palette — muted, part of the paper. Returning readers (the flag
+// `jct-visited` is set in localStorage after the first encounter) see the
+// fruit in the acid lime accent — a small reward for coming back.
 // -----------------------------------------------------------------------------
-function wireMaterial(mode: 'bone' | 'void'): THREE.MeshBasicMaterial {
-  const color = mode === 'void' ? 0xefebe2 : 0x0f0e0c;
+function wireMaterial(
+  mode: 'bone' | 'void',
+  returning: boolean,
+): THREE.MeshBasicMaterial {
+  const color = returning
+    ? 0xd8ff3a // acid lime for the second visit onward
+    : mode === 'void'
+      ? 0xefebe2 // bone wireframe on dark pages
+      : 0x0f0e0c; // ink wireframe on paper pages
   return new THREE.MeshBasicMaterial({
     color,
     wireframe: true,
     transparent: true,
-    opacity: mode === 'void' ? 0.32 : 0.22,
+    opacity: returning ? 0.45 : mode === 'void' ? 0.32 : 0.22,
     side: THREE.DoubleSide,
   });
 }
@@ -201,7 +212,21 @@ export function initFruitBackdrop(canvas: HTMLCanvasElement, name: FruitName) {
 
   // Read current mode for material color.
   const mode = (document.documentElement.dataset.mode as 'bone' | 'void') ?? 'bone';
-  const mat = wireMaterial(mode);
+
+  // Second-visit-and-beyond check. The flag is stored in localStorage and
+  // set here so the CURRENT page render uses the first-time appearance; the
+  // next navigation (or reload) will pick up the acid lime variant. The try
+  // block guards against storage being disabled / privacy mode.
+  const VISIT_KEY = 'jct-visited';
+  let returning = false;
+  try {
+    returning = localStorage.getItem(VISIT_KEY) === 'true';
+    localStorage.setItem(VISIT_KEY, 'true');
+  } catch {
+    /* localStorage unavailable — treat as first visit always. */
+  }
+
+  const mat = wireMaterial(mode, returning);
 
   const cfg = CONFIGS[name];
   const fruit = cfg.build(mat);

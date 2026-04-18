@@ -18,19 +18,25 @@ import type { Root, Paragraph, Image } from 'mdast';
  *   ![[left 16:9] caption](./img.png)                 float-left + 16:9 crop
  *   ![[right 4:3] caption](./img.png)                 float-right + 4:3 crop
  *
- * Supported aspect tokens: 16:9 | 4:3 | 3:2 | 1:1.
+ * Supported aspect tokens: 16:9 | 4:3 | 3:2 | 1:1 | 1.91:1.
  * Supported float tokens:  left | right.
  *
  * In vertical writing mode the float tokens are ignored (picture-page
  * layout wins). See base.css for the float / clear rules.
  */
 
-type Aspect = '16:9' | '4:3' | '3:2' | '1:1';
+type Aspect = '16:9' | '4:3' | '3:2' | '1:1' | '1.91:1';
 type Float = 'left' | 'right';
 
 const TAG_RE = /^\[([^\]]+)\]\s*([\s\S]*)$/;
-const ASPECTS = new Set<Aspect>(['16:9', '4:3', '3:2', '1:1']);
+const ASPECTS = new Set<Aspect>(['16:9', '4:3', '3:2', '1:1', '1.91:1']);
 const FLOATS = new Set<Float>(['left', 'right']);
+
+// CSS class names can't contain `:` or `.`, so normalise both to `-`.
+// `1.91:1` → `1-91-1`, `16:9` → `16-9`.
+export function aspectToClass(a: string): string {
+  return a.replace(/[:.]/g, '-');
+}
 
 function parseDirectives(raw: string): { float?: Float; aspect?: Aspect } {
   const tokens = raw.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
@@ -64,7 +70,7 @@ export default function remarkAspectImage() {
 
       const caption = (match[2] ?? '').trim();
       const classes = ['fig'];
-      if (aspect) classes.push(`fig-${aspect.replace(':', '-')}`);
+      if (aspect) classes.push(`fig-${aspectToClass(aspect)}`);
       if (float) classes.push(`fig-${float}`);
       const cls = classes.join(' ');
 

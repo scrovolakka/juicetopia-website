@@ -274,30 +274,99 @@ html[data-reading='immersion'] .route-head {
   display: none;
 }
 
-/* --- Reading article in immersion mode ---------------------------------- */
+/* --- Reading article in immersion mode ----------------------------------
 
-/* Full-bleed frame — the scroll column uses the whole viewport. */
+   Fullscreen layout: html/body are locked to 100dvh with no overflow.
+   body becomes a flex column so SiteHeader (top), <main> (fills), and
+   the floating TATE / chapter-nav chrome all coexist in one viewport.
+   This shape is the same desktop and mobile — mobile benefits most by
+   eliminating vertical page scroll entirely; the horizontal reading
+   column fills the whole screen.
+
+   Four-corner chrome:
+     top-left   = SiteHeader logo
+     top-right  = TATE/YOKO toggle (.head position:fixed)
+     bottom-left  = previous chapter link
+     bottom-right = next chapter link
+     bottom-center = MOKURO (index) link
+   ------------------------------------------------------------------- */
+
+html[data-reading='immersion'],
+html[data-reading='immersion'] body {
+  height: 100vh;        /* fallback */
+  height: 100dvh;
+  overflow: hidden;
+}
+html[data-reading='immersion'] body {
+  display: flex;
+  flex-direction: column;
+}
+html[data-reading='immersion'] .site-header {
+  flex: 0 0 auto;
+}
+html[data-reading='immersion'] main.page {
+  flex: 1 1 0;
+  min-height: 0;
+  padding-block: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Article = the reading stage. Flex column fills main. */
 article.reading[data-writing='vertical'] {
+  flex: 1 1 0;
+  min-height: 0;
   max-width: none;
   width: 100%;
-  gap: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-/* Children except the body-scroll revert to the reading column width so the
-   title, chapter-nav, etc. stay tight and centred. */
-article.reading[data-writing='vertical'] > .head,
-article.reading[data-writing='vertical'] > .ch-nav {
-  max-width: var(--max-reading);
-  margin-inline: auto;
-  width: 100%;
-}
-
-/* Head layout — shrink, keep only the TATE toggle row. */
-article.reading[data-writing='vertical'] .head {
-  gap: var(--space-2);
+/* Head floats to top-right corner (TATE toggle lives here). Taken out
+   of flex flow so it doesn't steal vertical space from the body. */
+article.reading[data-writing='vertical'] > .head {
+  position: fixed;
+  top: 0;
+  right: 0;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  overflow: visible;
+  z-index: calc(var(--z-header) + 1);
+  pointer-events: none;
 }
 article.reading[data-writing='vertical'] .head-top {
   justify-content: flex-end;
+  pointer-events: auto;
+}
+
+/* Body-scroll fills remaining flex space — the horizontal scroll column
+   the reader drags through. `var(--height-reading-v)` is overridden so
+   the flex parent can control height. */
+article.reading[data-writing='vertical'] > .body-scroll {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+}
+
+/* Chapter nav hugs the viewport bottom as a compact three-slot grid.
+   Full viewport width, no max-width — prev / index / next land in
+   the three horizontal corners (left / center / right). */
+article.reading[data-writing='vertical'] > .ch-nav {
+  flex: 0 0 auto;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-3);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-bg) 85%, transparent),
+    transparent
+  );
 }
 
 /* Hide chrome the reader doesn't need while immersed. */
@@ -333,7 +402,7 @@ article.reading[data-writing='vertical'] > .rule {
 .log-hero img:not([src$='.svg']),
 .body .fig .fig-frame img:not([src$='.svg']),
 .body p > img:not([src$='.svg']) {
-  filter: url(#duotone-jct);
+  /*filter: url(#duotone-jct);*/
 }
 
 /* Body headings inside reading articles — unify to mincho so ## / ###
@@ -401,6 +470,7 @@ article.reading[data-writing='vertical'] > .rule {
 .body .fig-4-3 .fig-frame { aspect-ratio: 4 / 3; }
 .body .fig-3-2 .fig-frame { aspect-ratio: 3 / 2; }
 .body .fig-1-1 .fig-frame { aspect-ratio: 1 / 1; }
+.body .fig-1-91-1 .fig-frame { aspect-ratio: 1.91 / 1; }
 /* Default image: natural ratio, fills width */
 .body .fig .fig-frame img {
   width: 100%;
@@ -414,7 +484,8 @@ article.reading[data-writing='vertical'] > .rule {
 .body .fig-16-9 .fig-frame img,
 .body .fig-4-3 .fig-frame img,
 .body .fig-3-2 .fig-frame img,
-.body .fig-1-1 .fig-frame img {
+.body .fig-1-1 .fig-frame img,
+.body .fig-1-91-1 .fig-frame img {
   height: 100%;
 }
 .body .fig figcaption {

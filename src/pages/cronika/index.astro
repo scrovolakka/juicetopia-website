@@ -100,7 +100,7 @@ const jsonLdNodes = [
 
               {entry.data.heroImage && (
                 <figure
-                  class={`log-hero hero-${(entry.data.heroAspect ?? '16:9').replace(':', '-')}`}
+                  class={`log-hero hero-${(entry.data.heroAspect ?? '16:9').replace(/[:.]/g, '-')}`}
                 >
                   <div class="hero-frame">
                     <Image
@@ -233,6 +233,7 @@ const jsonLdNodes = [
   .log-hero.hero-4-3 .hero-frame { aspect-ratio: 4 / 3; }
   .log-hero.hero-3-2 .hero-frame { aspect-ratio: 3 / 2; }
   .log-hero.hero-1-1 .hero-frame { aspect-ratio: 1 / 1; }
+  .log-hero.hero-1-91-1 .hero-frame { aspect-ratio: 1.91 / 1; }
   .log-hero .hero-frame :global(img) {
     width: 100%;
     height: 100%;

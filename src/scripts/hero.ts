@@ -413,7 +413,7 @@ export function initHero(canvas: HTMLCanvasElement) {
   let raf = 0;
   let t = 0;
   const ROT_SPEED = 0.0035;
-  const GRAVITY = 1.8;
+  const GRAVITY = 0.6;
   let lastTime = performance.now();
 
   function tick(now?: number) {
