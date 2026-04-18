@@ -11,8 +11,9 @@ export const NAV: NavItem[] = [
   { id: '02', label: 'MONTRA-MESA', href: '/gallery/', mode: 'void' },
   { id: '03', label: 'NOMA-DI MOKURO', href: '/characters/', mode: 'bone' },
   { id: '04', label: 'MONDO', href: '/mondo/', mode: 'bone' },
-  { id: '05', label: 'LEKSIKO', href: '/lexicon/', mode: 'bone' },
-  { id: '06', label: 'NOTA', href: '/about/', mode: 'bone' },
+  { id: '05', label: 'TRAKTATO', href: '/traktato/', mode: 'bone' },
+  { id: '06', label: 'LEKSIKO', href: '/lexicon/', mode: 'bone' },
+  { id: '07', label: 'NOTA', href: '/about/', mode: 'bone' },
 ];
 
 export function routeIndex(pathname: string): NavItem | undefined {

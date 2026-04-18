@@ -203,6 +203,48 @@ export function buildBlogPostingNode(p: BlogPostingInput): JsonLdNode {
   };
 }
 
+export interface ScholarlyArticleInput {
+  url: string;
+  headline: string;
+  description?: string;
+  abstract?: string;
+  datePublished: string;
+  dateModified?: string;
+  authors?: string[];       // author display names
+  version?: string;
+  keywords?: string[];
+  imageUrl?: string;
+  siteOrigin: string;
+}
+
+/** TRAKTATO papers use ScholarlyArticle — a richer Article subtype with
+    fields for abstract / version / authors that Google Scholar and AI
+    readers can consume. Falls back gracefully in plain search if the
+    fields aren't understood. */
+export function buildScholarlyArticleNode(a: ScholarlyArticleInput): JsonLdNode {
+  const authors =
+    a.authors && a.authors.length > 0
+      ? a.authors.map((name) => ({ '@type': 'Person', name }))
+      : [{ '@id': `${a.siteOrigin}${PUBLISHER_ID}` }];
+  return {
+    '@type': 'ScholarlyArticle',
+    '@id': `${a.url}#paper`,
+    url: a.url,
+    headline: a.headline,
+    ...(a.description && { description: a.description }),
+    ...(a.abstract && { abstract: a.abstract }),
+    datePublished: a.datePublished,
+    ...(a.dateModified && { dateModified: a.dateModified }),
+    ...(a.version && { version: a.version }),
+    ...(a.keywords?.length && { keywords: a.keywords }),
+    ...(a.imageUrl && { image: a.imageUrl }),
+    inLanguage: 'ja',
+    author: authors,
+    publisher: { '@id': `${a.siteOrigin}${PUBLISHER_ID}` },
+    isPartOf: { '@id': `${a.siteOrigin}${WEBSITE_ID}` },
+  };
+}
+
 export interface BreadcrumbItem {
   name: string;
   url: string; // absolute

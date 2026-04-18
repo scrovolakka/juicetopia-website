@@ -1,0 +1,276 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const all = await getCollection('traktato');
+// Sort by explicit order, then by publishedAt descending as tiebreak.
+const entries = all.sort((a, b) => {
+  if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+  return b.data.publishedAt.getTime() - a.data.publishedAt.getTime();
+});
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const fmtDate = (x: Date) => x.toISOString().slice(0, 10).replace(/-/g, '.');
+
+const kindLabel: Record<string, string> = {
+  paper: 'PAPER',
+  spec: 'SPEC',
+  rfc: 'RFC',
+  note: 'NOTE',
+};
+
+// Group by kind for section headings.
+type Entry = (typeof entries)[number];
+const groups = new Map<string, Entry[]>();
+for (const e of entries) {
+  const k = e.data.kind;
+  if (!groups.has(k)) groups.set(k, []);
+  groups.get(k)!.push(e);
+}
+const kindOrder = ['paper', 'spec', 'rfc', 'note'];
+const sections = kindOrder
+  .filter((k) => groups.has(k))
+  .map((k) => ({ kind: k, items: groups.get(k)! }));
+---
+
+<BaseLayout title="TRAKTATO" description="juicetopia — 論集 / papers & specs." mode="bone">
+  <section class="traktato page-column flow-16">
+    <header class="flow" data-reveal>
+      <h1 class="section-title">
+        TRAKTATO<br />
+        <span class="jp">論集</span>
+      </h1>
+      <p class="mono">ARKIVO · {pad(entries.length)} FAKTA · {pad(sections.length)} BANDA</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <p class="lede" data-reveal>
+      世界の周縁に貼り付いた紙片。論文、仕様書、覚書。通読するものではなく、
+      必要に応じて引かれるもの。縦書きではなく、二段組や一段組を使い分ける。
+      数式（LaTeX）と図（Mermaid）を本文中に埋めることができる。
+    </p>
+
+    <div class="rule"></div>
+
+    {
+      entries.length === 0 ? (
+        <p class="empty mono" data-reveal>MANKA · まだ論文がありません。</p>
+      ) : (
+        sections.map((sec) => (
+          <article class="band flow-8" data-reveal>
+            <header class="sec-head">
+              <h2 class="sec-title">
+                {kindLabel[sec.kind]}
+                <span class="sec-sub mono">{sec.items.length.toString().padStart(2, '0')} FAKTA</span>
+              </h2>
+            </header>
+            <ul class="entry-list" data-reveal-stagger="30">
+              {sec.items.map((e) => {
+                const href = `${base}/traktato/${e.slug}/`;
+                return (
+                  <li class="entry">
+                    <a class="entry-link" href={href}>
+                      <span class="entry-id mono">{e.data.paperId}</span>
+                      <div class="entry-body">
+                        <div class="entry-title-row">
+                          <span class="entry-jp">{e.data.title}</span>
+                          {e.data.label && (
+                            <span class="entry-label mono">{e.data.label}</span>
+                          )}
+                        </div>
+                        {e.data.abstract && (
+                          <p class="entry-summary">{e.data.abstract}</p>
+                        )}
+                        <p class="entry-meta mono">
+                          <span>{fmtDate(e.data.publishedAt)}</span>
+                          {e.data.version && (
+                            <>
+                              <span class="sep">·</span>
+                              <span>{e.data.version}</span>
+                            </>
+                          )}
+                          {e.data.authors.length > 0 && (
+                            <>
+                              <span class="sep">·</span>
+                              <span>{e.data.authors.join(' / ')}</span>
+                            </>
+                          )}
+                          <span class="sep">·</span>
+                          <span class={`layout-chip layout-${e.data.layout}`}>
+                            {e.data.layout === 'double' ? '2COL' : '1COL'}
+                          </span>
+                        </p>
+                      </div>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </article>
+        ))
+      )
+    }
+
+    <div class="rule"></div>
+
+    <nav class="foot-nav" data-reveal>
+      <a class="foot-link" href={`${base}/lexicon/`}>
+        <span class="mono meta-dim">→ NEXT ·</span> <span class="foot-l">LEKSIKO</span>{' '}
+        <span class="jp">辞書</span>
+      </a>
+    </nav>
+  </section>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .section-title .jp {
+    display: block;
+    font-family: var(--font-mincho);
+    font-size: 0.32em;
+    letter-spacing: 0.25em;
+    color: var(--color-ink-muted);
+    margin-top: var(--space-3);
+  }
+  .lede {
+    max-width: var(--max-reading);
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: var(--lh-reading);
+    color: var(--color-ink-muted);
+  }
+  .empty {
+    color: var(--color-ink-muted);
+    letter-spacing: 0.12em;
+  }
+  .band + .band {
+    margin-top: var(--space-10);
+  }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .sec-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-acid-dim);
+  }
+  .sec-sub {
+    font-size: 0.72em;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-muted);
+  }
+  .entry-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .entry {
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .entry-link {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    align-items: baseline;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .entry-link:hover,
+  .entry-link:focus-visible {
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-acid) 8%);
+  }
+  .entry-id {
+    color: var(--color-acid-ink);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+  }
+  .entry-body {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .entry-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .entry-jp {
+    font-family: var(--font-mincho);
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+  }
+  .entry-label {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+  }
+  .entry-summary {
+    font-family: var(--font-mincho);
+    font-size: 0.95rem;
+    color: var(--color-ink-muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+  .entry-meta {
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    align-items: baseline;
+    margin: 0;
+  }
+  .entry-meta .sep {
+    color: var(--color-acid-ink);
+  }
+  .layout-chip {
+    border: 1px solid var(--color-rule);
+    padding: 0.05em 0.5em;
+    border-radius: 2px;
+  }
+  .layout-chip.layout-double {
+    border-color: var(--color-acid-dim);
+    color: var(--color-acid-ink);
+  }
+  .foot-nav {
+    padding-top: var(--space-4);
+  }
+  .foot-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+  }
+  .foot-l {
+    color: var(--color-acid-ink);
+  }
+  .foot-link .jp {
+    font-family: var(--font-mincho);
+    color: var(--color-ink-muted);
+    letter-spacing: 0.2em;
+  }
+</style>

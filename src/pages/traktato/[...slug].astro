@@ -1,0 +1,13 @@
+---
+import PaperLayout from '~/layouts/PaperLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const all = await getCollection('traktato');
+  return all.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+---
+
+<PaperLayout entry={entry} />

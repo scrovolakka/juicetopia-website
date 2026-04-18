@@ -124,4 +124,39 @@ const cronika = defineCollection({
     }),
 });
 
-export const collections = { novel, gallery, characters, codex, lexicon, cronika };
+// TRAKTATO — papers / specs / notes. Horizontal-only, 1 or 2 column layout,
+// supports LaTeX ($..$ / $$..$$) and Mermaid diagrams (```mermaid blocks).
+// Slugs correspond to the original filename stem (e.g. fantasy_paper_command_verse).
+const traktato = defineCollection({
+  type: 'content',
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),                           // 日本語の主タイトル
+      label: z.string().optional(),                // 英字サブタイトル / 原題
+      paperId: z.string(),                         // T.001 形式
+      // Document classification — drives section icon/chip on the list page.
+      kind: z.enum(['paper', 'spec', 'rfc', 'note']).default('paper'),
+      // Body column layout. 'double' is 2-column at wide viewports;
+      // 'single' forces 1-column everywhere (for long-form specs / notes).
+      layout: z.enum(['single', 'double']).default('single'),
+      abstract: z.string().optional(),             // 冒頭 abstract（枠付きで表示）
+      authors: z.array(z.string()).default([]),    // 列挙可
+      publishedAt: z.coerce.date(),
+      updatedAt: z.coerce.date().optional(),
+      version: z.string().optional(),              // "v1.2" など
+      order: z.number().int().default(0),
+      // Hero image / OG
+      heroImage: image().optional(),
+      heroAlt: z.string().optional(),
+      heroCaption: z.string().optional(),
+      heroAspect: z.enum(['16:9', '4:3', '3:2', '1:1', '1.91:1']).default('16:9'),
+      // Cross-refs
+      seeAlso: z.array(z.string()).default([]),    // other traktato slugs
+      mondoRefs: z.array(z.string()).default([]),
+      leksikoRefs: z.array(z.string()).default([]),
+      // Tags — free-form keywords shown in the footer
+      tags: z.array(z.string()).default([]),
+    }),
+});
+
+export const collections = { novel, gallery, characters, codex, lexicon, cronika, traktato };

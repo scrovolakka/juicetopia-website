@@ -1,0 +1,505 @@
+---
+/**
+ * PaperLayout — used by TRAKTATO detail pages.
+ *
+ * Horizontal-only (no TATE toggle). Supports:
+ *   - LaTeX via remark-math / rehype-katex (KaTeX CSS loaded below)
+ *   - Mermaid diagrams via remark-mermaid (client-side renderer lazy-loaded)
+ *   - 1-column or 2-column body via the `layout` prop ('single' | 'double').
+ *
+ * Intended content: fantasy_paper_command_verse, gill_guard_spec_revised,
+ * and future in-fiction "papers" / "specs" / "RFCs".
+ */
+import 'katex/dist/katex.min.css';
+import BaseLayout from './BaseLayout.astro';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import {
+  buildScholarlyArticleNode,
+  buildBreadcrumbNode,
+} from '~/lib/jsonld';
+
+interface Props {
+  entry: CollectionEntry<'traktato'>;
+}
+const { entry } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const d = entry.data;
+
+const heroAspect = d.heroAspect ?? '16:9';
+const heroClass = `paper-hero hero-${heroAspect.replace(/[:.]/g, '-')}`;
+
+const kindLabel: Record<string, string> = {
+  paper: 'PAPER',
+  spec: 'SPEC',
+  rfc: 'RFC',
+  note: 'NOTE',
+};
+const fmtDate = (x: Date) => x.toISOString().slice(0, 10).replace(/-/g, '.');
+
+// --- JSON-LD -----------------------------------------------------------
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.pathname;
+const indexUrl = Astro.site
+  ? new URL(`${base}/traktato/`, Astro.site).toString()
+  : `${base}/traktato/`;
+const siteUrl = Astro.site ? new URL(`${base}/`, Astro.site).toString() : `${base}/`;
+const siteOrigin = Astro.site ? Astro.site.origin : '';
+
+const jsonLdNodes = [
+  buildScholarlyArticleNode({
+    url: canonicalUrl,
+    headline: d.title,
+    description: d.abstract,
+    abstract: d.abstract,
+    datePublished: d.publishedAt.toISOString(),
+    dateModified: d.updatedAt?.toISOString(),
+    authors: d.authors,
+    version: d.version,
+    keywords: d.tags,
+    siteOrigin,
+  }),
+  buildBreadcrumbNode([
+    { name: 'juicetopia', url: siteUrl },
+    { name: '論集', url: indexUrl },
+    { name: d.title, url: canonicalUrl },
+  ]),
+];
+
+const { Content } = await entry.render();
+---
+
+<BaseLayout
+  title={d.title}
+  description={d.abstract ?? d.label}
+  mode="bone"
+  ogImage={d.heroImage}
+  ogImageAlt={d.heroAlt ?? d.title}
+  jsonLdNodes={jsonLdNodes}
+>
+  {/*
+    NOTE: No `data-reveal` on the outer <article>. The paper body can be
+    extremely long (1000+ lines of rendered markdown), and scroll-reveal's
+    IntersectionObserver uses an 8% threshold — 8% of a 50,000px article
+    exceeds the viewport height, so the reveal trigger never fires and the
+    whole article would stay at opacity: 0. Inner sections (hero, abstract,
+    footer, nav) keep their own `data-reveal` and animate individually.
+  */}
+  <article class="paper page-column" data-layout={d.layout}>
+    <header class="paper-head flow-4">
+      <p class="mono crumb">
+        <span class="acid">{d.paperId}</span>
+        <span class="sep">·</span>
+        <span>TRAKTATO</span>
+        <span class="sep">·</span>
+        <span class={`kind kind-${d.kind}`}>{kindLabel[d.kind]}</span>
+        {d.version && (
+          <>
+            <span class="sep">·</span>
+            <span>{d.version}</span>
+          </>
+        )}
+      </p>
+
+      <h1 class="title">{d.title}</h1>
+      {d.label && <p class="subtitle mono">{d.label}</p>}
+
+      <dl class="meta mono">
+        {d.authors.length > 0 && (
+          <>
+            <dt>AUTHORS</dt>
+            <dd>{d.authors.join(' / ')}</dd>
+          </>
+        )}
+        <dt>PUBLISHED</dt>
+        <dd>{fmtDate(d.publishedAt)}</dd>
+        {d.updatedAt && (
+          <>
+            <dt>UPDATED</dt>
+            <dd>{fmtDate(d.updatedAt)}</dd>
+          </>
+        )}
+      </dl>
+    </header>
+
+    {d.heroImage && (
+      <figure class={heroClass} data-reveal>
+        <div class="hero-frame">
+          <Image
+            src={d.heroImage}
+            alt={d.heroAlt ?? d.title}
+            widths={[640, 960, 1280]}
+            sizes="(min-width: 48rem) 60rem, 90vw"
+          />
+        </div>
+        {d.heroCaption && <figcaption class="mono">{d.heroCaption}</figcaption>}
+      </figure>
+    )}
+
+    {d.abstract && (
+      <section class="abstract" data-reveal>
+        <h2 class="abstract-head mono">ABSTRACT · 要旨</h2>
+        <p>{d.abstract}</p>
+      </section>
+    )}
+
+    <div class="rule"></div>
+
+    <div class="paper-body" data-layout={d.layout}>
+      <Content />
+    </div>
+
+    {d.tags.length > 0 && (
+      <footer class="paper-foot" data-reveal>
+        <div class="rule"></div>
+        <ul class="tags mono">
+          {d.tags.map((t) => (
+            <li class="tag">#{t}</li>
+          ))}
+        </ul>
+      </footer>
+    )}
+
+    <div class="rule"></div>
+
+    <nav class="entry-nav mono" data-reveal>
+      <a href={`${base}/traktato/`}>← INDEX · 論集</a>
+    </nav>
+  </article>
+</BaseLayout>
+
+<!-- Mermaid lazy-loader (only runs when the page has <pre class="mermaid"> nodes) -->
+<script>
+  import { initMermaid } from '~/scripts/mermaid-init';
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => initMermaid());
+  } else {
+    setTimeout(() => initMermaid(), 200);
+  }
+</script>
+
+<style>
+  /* ------------------------------------------------------------------
+     Paper shell — horizontal only. The article's max-width widens so
+     2-column layouts have room to breathe without feeling cramped.
+  ------------------------------------------------------------------ */
+  .paper {
+    --paper-max: 72rem;
+    max-width: var(--paper-max);
+    margin-inline: auto;
+    display: grid;
+    gap: var(--space-8);
+  }
+  .paper-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .crumb {
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    align-items: baseline;
+  }
+  .crumb .sep {
+    color: var(--color-acid-ink);
+  }
+  .crumb .kind {
+    padding: 0.15em 0.6em;
+    border: 1px solid var(--color-rule);
+    border-radius: 2px;
+    color: var(--color-ink);
+  }
+  .crumb .kind-spec,
+  .crumb .kind-rfc {
+    border-color: var(--color-acid);
+    color: var(--color-acid-ink);
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: var(--ls-display);
+    line-height: 1.05;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-muted);
+    margin: 0;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: var(--space-2) var(--space-4);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    margin: var(--space-3) 0 0;
+  }
+  .meta dt {
+    color: var(--color-ink-muted);
+  }
+  .meta dd {
+    margin: 0;
+    color: var(--color-ink);
+  }
+
+  /* Abstract box — a bordered panel before the main body. */
+  .abstract {
+    border: 1px solid var(--color-rule);
+    border-inline-start: 3px solid var(--color-acid);
+    padding: var(--space-5) var(--space-6);
+    background: color-mix(in srgb, var(--color-bg) 94%, var(--color-ink) 6%);
+    display: grid;
+    gap: var(--space-3);
+  }
+  .abstract-head {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.18em;
+    color: var(--color-ink-muted);
+  }
+  .abstract p {
+    margin: 0;
+    font-family: var(--font-mincho);
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  /* ------------------------------------------------------------------
+     Paper body. Horizontal writing, serif for narrative, system sans
+     fallback for clarity in 2-col mode.
+     1-col uses font-mincho (same as codex/novel). 2-col drops size a
+     notch so line length in each column stays readable.
+  ------------------------------------------------------------------ */
+  .paper-body {
+    font-family: var(--font-mincho);
+    font-size: var(--fs-reading);
+    line-height: 1.75;
+    letter-spacing: var(--ls-reading);
+  }
+  .paper-body :global(p) {
+    margin-block: 1.2em;
+  }
+  .paper-body :global(p:first-child) {
+    margin-top: 0;
+  }
+  .paper-body :global(h2),
+  .paper-body :global(h3),
+  .paper-body :global(h4) {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-block: 1.6em 0.6em;
+  }
+  .paper-body :global(h2) {
+    font-size: 1.5rem;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+  }
+  .paper-body :global(h3) {
+    font-size: 1.2rem;
+  }
+  .paper-body :global(h4) {
+    font-size: 1rem;
+    color: var(--color-ink-muted);
+    letter-spacing: 0.08em;
+  }
+  .paper-body :global(ul),
+  .paper-body :global(ol) {
+    padding-inline-start: 1.4em;
+    margin-block: 1em;
+  }
+  .paper-body :global(li) {
+    margin-block: 0.4em;
+  }
+  .paper-body :global(a) {
+    color: var(--color-ink);
+    border-bottom: 1px solid var(--color-acid);
+  }
+  .paper-body :global(a:hover),
+  .paper-body :global(a:focus-visible) {
+    color: var(--color-acid-ink);
+  }
+  .paper-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    padding: 0.1em 0.35em;
+    background: color-mix(in srgb, var(--color-bg) 88%, var(--color-ink) 12%);
+    border-radius: 2px;
+  }
+  .paper-body :global(pre) {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    padding: var(--space-4) var(--space-5);
+    margin-block: 1.4em;
+    background: color-mix(in srgb, var(--color-bg) 90%, var(--color-ink) 10%);
+    border: 1px solid var(--color-rule);
+    border-inline-start: 3px solid var(--color-acid-dim);
+    overflow-x: auto;
+  }
+  .paper-body :global(pre code) {
+    padding: 0;
+    background: transparent;
+  }
+  .paper-body :global(blockquote) {
+    margin-block: 1.4em;
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--color-acid);
+    color: var(--color-ink-muted);
+  }
+  .paper-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-block: 1.4em;
+    font-size: 0.95em;
+  }
+  .paper-body :global(th),
+  .paper-body :global(td) {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-rule);
+    text-align: left;
+  }
+  .paper-body :global(th) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    border-bottom-color: var(--color-acid-dim);
+  }
+  .paper-body :global(hr) {
+    border: none;
+    border-top: 1px solid var(--color-rule);
+    margin-block: 2em;
+  }
+
+  /* Mermaid figure container — render as a bordered block and center SVG. */
+  .paper-body :global(pre.mermaid) {
+    background: var(--color-bg);
+    border: 1px solid var(--color-rule);
+    border-inline-start: 3px solid var(--color-acid);
+    padding: var(--space-5);
+    text-align: center;
+    overflow-x: auto;
+  }
+  .paper-body :global(pre.mermaid svg) {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+  }
+
+  /* KaTeX block — let display math breathe, keep inline math inline. */
+  .paper-body :global(.katex-display) {
+    margin-block: 1.2em;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block: 0.4em;
+  }
+  .paper-body :global(.katex) {
+    font-size: 1.05em;
+  }
+
+  /* ------------------------------------------------------------------
+     Two-column mode.
+     Activated when data-layout="double" AND viewport >= 64rem.
+     We use CSS multi-column, which naturally balances text; large
+     elements (headings, figures, mermaid, display math, tables, pre)
+     span both columns.
+  ------------------------------------------------------------------ */
+  @media (min-width: 64rem) {
+    .paper-body[data-layout='double'] {
+      column-count: 2;
+      column-gap: var(--space-8);
+      column-rule: 1px solid var(--color-rule);
+      font-size: calc(var(--fs-reading) * 0.94);
+      line-height: 1.7;
+    }
+    .paper-body[data-layout='double'] :global(h2),
+    .paper-body[data-layout='double'] :global(h3),
+    .paper-body[data-layout='double'] :global(figure),
+    .paper-body[data-layout='double'] :global(table),
+    .paper-body[data-layout='double'] :global(pre),
+    .paper-body[data-layout='double'] :global(pre.mermaid),
+    .paper-body[data-layout='double'] :global(.katex-display),
+    .paper-body[data-layout='double'] :global(blockquote) {
+      column-span: all;
+      /* column-span: all breaks the surrounding text flow; add margin to
+         separate the spanned element from siblings. */
+      margin-block: 1.4em;
+    }
+    .paper-body[data-layout='double'] :global(p) {
+      /* Avoid orphan single-line paragraphs splitting across columns. */
+      break-inside: avoid-column;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Hero figure — shared aspect ratios with other layouts.
+  ------------------------------------------------------------------ */
+  .paper-hero {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .paper-hero .hero-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    background: color-mix(in srgb, var(--color-bg) 92%, var(--color-ink) 8%);
+  }
+  .paper-hero.hero-16-9 .hero-frame { aspect-ratio: 16 / 9; }
+  .paper-hero.hero-4-3 .hero-frame { aspect-ratio: 4 / 3; }
+  .paper-hero.hero-3-2 .hero-frame { aspect-ratio: 3 / 2; }
+  .paper-hero.hero-1-1 .hero-frame { aspect-ratio: 1 / 1; }
+  .paper-hero.hero-1-91-1 .hero-frame { aspect-ratio: 1.91 / 1; }
+  .paper-hero .hero-frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .paper-hero figcaption {
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+    padding-inline-start: 1em;
+    border-inline-start: 1px solid var(--color-acid-dim);
+  }
+
+  /* Footer — tags and nav. */
+  .paper-foot {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .tags {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    color: var(--color-ink-muted);
+  }
+  .tag {
+    padding: 0.1em 0.6em;
+    border: 1px solid var(--color-rule);
+    border-radius: 2px;
+  }
+  .entry-nav a {
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+  }
+  .entry-nav a:hover,
+  .entry-nav a:focus-visible {
+    color: var(--color-acid-ink);
+  }
+</style>
