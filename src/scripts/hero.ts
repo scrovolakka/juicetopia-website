@@ -1,55 +1,37 @@
 /**
  * Hero 3D — SACRABOLLA.
- * Low-poly wireframe chalice on a lathe, with acid vertex dots, an interior
- * liquid surface (ink red), and a loop of drip particles escaping the rim.
- * Rotates on Y with a slight X wobble and mild mouse parallax.
- * Respects prefers-reduced-motion.
+ * Full-viewport immersive scene: low-poly wireframe chalice with orbiting
+ * content nodes connected by acid lines, vertex particles, drip simulation,
+ * and a scrolling grid corridor. Respects prefers-reduced-motion.
  */
 import * as THREE from 'three';
 
 type Profile = [number, number][];
 
-/**
- * Half-section profile of the chalice, traced from the bottom pole of the foot,
- * up and around to the top of the rim, down the interior wall, and back to the
- * interior-bottom pole. LatheGeometry revolves this around the Y axis.
- *
- * Measurements are in world units — the whole mesh is scaled to fit.
- */
 const CHALICE_PROFILE: Profile = [
-  // Foot — compact pedestal. Diameter is now clearly smaller than the bowl so
-  // the silhouette reads as "chalice on a stem" rather than a funnel.
   [0.00, -1.30],
   [0.70, -1.30],
   [0.72, -1.27],
   [0.66, -1.22],
   [0.34, -1.14],
   [0.22, -1.06],
-  // Stem joint — fluted region
   [0.18, -0.96],
   [0.17, -0.88],
-  // Knop — bulbous node
   [0.22, -0.83],
   [0.36, -0.76],
   [0.36, -0.62],
   [0.22, -0.55],
   [0.17, -0.48],
-  // Upper shaft — thin neck below bowl
   [0.16, -0.40],
-  // Bowl — rounded / hemispheric, not conic. Tight base, rapid curve outward,
-  // upper wall nearly vertical into the rim.
   [0.22, -0.35],
   [0.42, -0.28],
   [0.75, -0.12],
   [1.00, 0.12],
   [1.15, 0.35],
   [1.21, 0.52],
-  // Rim — outer lip
   [1.23, 0.58],
   [1.23, 0.62],
   [1.15, 0.62],
-  // Interior wall — descend mirroring the bowl's curve back to the axis. Inner
-  // bottom sits slightly above exterior bottom to imply wall thickness.
   [1.08, 0.55],
   [0.95, 0.35],
   [0.75, 0.05],
@@ -58,17 +40,22 @@ const CHALICE_PROFILE: Profile = [
   [0.00, -0.28],
 ];
 
-// Ring loops at key y-values give the wireframe visible "bands" at the rim,
-// the knop equator, and the foot edge.
 const BAND_YS = [0.62, 0.58, -0.69, -1.27];
+
+const NODE_ORBITS = [
+  { radius: 3.2, speed: 0.18, yOff: 0.6, phase: 0, yAmp: 0.20 },
+  { radius: 3.7, speed: -0.14, yOff: -0.15, phase: Math.PI * 0.4, yAmp: 0.25 },
+  { radius: 2.8, speed: 0.22, yOff: 0.1, phase: Math.PI * 0.8, yAmp: 0.15 },
+  { radius: 3.5, speed: -0.16, yOff: -0.5, phase: Math.PI * 1.2, yAmp: 0.22 },
+  { radius: 3.0, speed: 0.20, yOff: 0.4, phase: Math.PI * 1.6, yAmp: 0.18 },
+];
 
 function buildChaliceGeometry(): THREE.LatheGeometry {
   const points = CHALICE_PROFILE.map(([x, y]) => new THREE.Vector2(x, y));
-  const segments = 12; // low-poly, matches the torus knot's density
-  return new THREE.LatheGeometry(points, segments);
+  return new THREE.LatheGeometry(points, 12);
 }
 
-export function initHero(canvas: HTMLCanvasElement) {
+export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
   const renderer = new THREE.WebGLRenderer({
@@ -81,9 +68,9 @@ export function initHero(canvas: HTMLCanvasElement) {
 
   const scene = new THREE.Scene();
 
-  const BASE_FOV = 45;
+  const BASE_FOV = 50;
   const camera = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.1, 100);
-  camera.position.set(0, 0.05, 6);
+  camera.position.set(0, 0.15, 7.5);
 
   // Chalice body — wireframe bone
   const chaliceGeom = buildChaliceGeometry();
@@ -95,9 +82,6 @@ export function initHero(canvas: HTMLCanvasElement) {
     side: THREE.DoubleSide,
   });
   const chalice = new THREE.Mesh(chaliceGeom, chaliceMat);
-  // Non-uniform scale: slightly taller than wide, and overall larger so the
-  // chalice dominates the frame. Lifted on Y so its mass centers vertically
-  // (the profile is bottom-heavy without this shift).
   chalice.scale.set(1.18, 1.32, 1.18);
   chalice.position.y = 0.44;
   scene.add(chalice);
@@ -126,18 +110,8 @@ export function initHero(canvas: HTMLCanvasElement) {
   const particles = new THREE.Points(particleGeom, particleMat);
   chalice.add(particles);
 
-  // ------------------------------------------------------------------------
-  // Polygon glitch — snapshot the pristine vertex positions so we can perturb
-  // them briefly and restore. Two flavours of glitch are scheduled randomly:
-  //   · 'jitter' — every vertex displaced by small noise for ~200ms (signal
-  //     static on the surface)
-  //   · 'shear'  — a horizontal band of vertices slides in X for a few frames
-  //     (scanline tear / tape dropout)
-  // Both are disabled under prefers-reduced-motion.
-  // ------------------------------------------------------------------------
-  const chaliceOrig = new Float32Array(
-    (positions.array as Float32Array).length,
-  );
+  // Polygon glitch system
+  const chaliceOrig = new Float32Array((positions.array as Float32Array).length);
   chaliceOrig.set(positions.array as Float32Array);
   const particlesOrig = new Float32Array(particlePositions.length);
   particlesOrig.set(particlePositions);
@@ -151,20 +125,16 @@ export function initHero(canvas: HTMLCanvasElement) {
   let nextGlitchAt = performance.now() + 2500 + Math.random() * 4000;
 
   function scheduleNextGlitch(now: number) {
-    // 3–8 s between events on average, slightly skewed short on occasion.
-    const gap = 2800 + Math.random() * 5500;
-    nextGlitchAt = now + gap;
+    nextGlitchAt = now + 2800 + Math.random() * 5500;
   }
 
   function startGlitch(now: number) {
-    const roll = Math.random();
-    if (roll < 0.78) {
+    if (Math.random() < 0.78) {
       glitchKind = 'jitter';
       glitchUntil = now + 120 + Math.random() * 240;
     } else {
       glitchKind = 'shear';
       glitchUntil = now + 60 + Math.random() * 160;
-      // Pick a random y band relative to the profile's height range.
       glitchShearY = -1.3 + Math.random() * 1.9;
       glitchShearBand = 0.12 + Math.random() * 0.18;
       glitchShearDx = (Math.random() - 0.5) * 0.35;
@@ -172,8 +142,7 @@ export function initHero(canvas: HTMLCanvasElement) {
   }
 
   function restoreGeometry() {
-    const arr = positions.array as Float32Array;
-    arr.set(chaliceOrig);
+    (positions.array as Float32Array).set(chaliceOrig);
     particlePositions.set(particlesOrig);
     positions.needsUpdate = true;
     particleGeom.attributes.position.needsUpdate = true;
@@ -197,18 +166,14 @@ export function initHero(canvas: HTMLCanvasElement) {
         pArr[i] = particlesOrig[i] + (Math.random() - 0.5) * amp;
       }
     } else if (glitchKind === 'shear') {
-      // Only X is displaced for vertices within the band; everything else
-      // stays on the original position.
       for (let i = 0; i < arr.length; i += 3) {
-        const y = chaliceOrig[i + 1];
-        const inBand = Math.abs(y - glitchShearY) < glitchShearBand;
+        const inBand = Math.abs(chaliceOrig[i + 1] - glitchShearY) < glitchShearBand;
         arr[i] = chaliceOrig[i] + (inBand ? glitchShearDx : 0);
         arr[i + 1] = chaliceOrig[i + 1];
         arr[i + 2] = chaliceOrig[i + 2];
       }
       for (let i = 0; i < pArr.length; i += 3) {
-        const y = particlesOrig[i + 1];
-        const inBand = Math.abs(y - glitchShearY) < glitchShearBand;
+        const inBand = Math.abs(particlesOrig[i + 1] - glitchShearY) < glitchShearBand;
         pArr[i] = particlesOrig[i] + (inBand ? glitchShearDx : 0);
         pArr[i + 1] = particlesOrig[i + 1];
         pArr[i + 2] = particlesOrig[i + 2];
@@ -218,9 +183,7 @@ export function initHero(canvas: HTMLCanvasElement) {
     particleGeom.attributes.position.needsUpdate = true;
   }
 
-  // Accent band rings — extra circles at the rim / knop equator / foot edge.
-  // Implemented as thin LineLoop geometries so they sit exactly on the lathe
-  // surface and rotate with the chalice.
+  // Accent band rings
   const bandMat = new THREE.LineBasicMaterial({
     color: 0xd8ff3a,
     transparent: true,
@@ -228,7 +191,6 @@ export function initHero(canvas: HTMLCanvasElement) {
   });
   const bands: THREE.LineLoop[] = [];
   for (const y of BAND_YS) {
-    // Find the x at this y by walking the profile.
     const x = profileXAtY(CHALICE_PROFILE, y) ?? 0;
     if (x <= 0.01) continue;
     const circle = new THREE.BufferGeometry();
@@ -246,9 +208,7 @@ export function initHero(canvas: HTMLCanvasElement) {
     bands.push(loop);
   }
 
-  // Interior liquid surface — acid disc at the inner rim level.
-  // Very thin disc slightly below the rim, rendered double-sided so it reads
-  // from above and through the wireframe from the side.
+  // Interior liquid surface
   const liquidGeom = new THREE.CircleGeometry(1.06, 48);
   const liquidMat = new THREE.MeshBasicMaterial({
     color: 0xd8ff3a,
@@ -259,14 +219,13 @@ export function initHero(canvas: HTMLCanvasElement) {
   });
   const liquid = new THREE.Mesh(liquidGeom, liquidMat);
   liquid.rotation.x = -Math.PI / 2;
-  liquid.position.y = 0.55; // just beneath the rim top, inside the inner wall
+  liquid.position.y = 0.55;
   chalice.add(liquid);
 
-  // Drip particles — a fixed pool of descending acid points spawned at the rim.
-  // Each one falls under gravity, fades out, then respawns at the rim edge.
+  // Drip particles
   const DRIP_COUNT = 14;
   const dripPositions = new Float32Array(DRIP_COUNT * 3);
-  const dripVelocities = new Float32Array(DRIP_COUNT); // y velocity only; x,z static
+  const dripVelocities = new Float32Array(DRIP_COUNT);
   const dripAges = new Float32Array(DRIP_COUNT);
   const dripLifes = new Float32Array(DRIP_COUNT);
   const dripAngles = new Float32Array(DRIP_COUNT);
@@ -296,33 +255,26 @@ export function initHero(canvas: HTMLCanvasElement) {
     depthWrite: false,
   });
   const drips = new THREE.Points(dripGeom, dripMat);
-  // Drips live in chalice space so they rotate with it — feels physical.
   chalice.add(drips);
 
-  // Acid halo ring behind — sized to sit just outside the enlarged chalice
-  // and lifted to match the chalice's vertical center.
+  // Halo ring
   const ringGeom = new THREE.RingGeometry(2.55, 2.58, 64);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xd8ff3a,
     transparent: true,
-    opacity: 0.28,
+    opacity: 0.22,
     side: THREE.DoubleSide,
   });
   const ring = new THREE.Mesh(ringGeom, ringMat);
   ring.position.set(0, 0.22, -1);
   scene.add(ring);
 
-  // ------------------------------------------------------------------------
-  // Grid corridor — vaporwave/retro-3D background. Two large planes (floor +
-  // ceiling) rendered with a shader that draws a moving grid, giving the
-  // sensation that the viewer is sliding forward through a tunnel while the
-  // chalice hangs suspended in the foreground.
-  // ------------------------------------------------------------------------
+  // Grid corridor
   const gridUniforms = {
     uTime: { value: 0 },
     uColor: { value: new THREE.Color(0xd8ff3a) },
     uFade: { value: 0.55 },
-    uScroll: { value: 2.2 }, // world units per second the grid appears to travel
+    uScroll: { value: 2.2 },
   };
   const gridMat = new THREE.ShaderMaterial({
     uniforms: gridUniforms,
@@ -342,20 +294,13 @@ export function initHero(canvas: HTMLCanvasElement) {
       uniform float uScroll;
 
       void main() {
-        // Align grid to world XZ so the floor and ceiling share ruling.
         vec2 coord = vWorldPos.xz;
-        // Scroll the Z axis forward — lines appear to move toward the camera.
         coord.y += uTime * uScroll;
-        // Distance to nearest grid line in each axis.
         vec2 g = abs(fract(coord) - 0.5);
         float d = min(g.x, g.y);
-        // Anti-aliased line.
         float line = 1.0 - smoothstep(0.0, 0.035, d);
-        // Distance fade — near the viewer it's sharp, near horizon it dies.
         float dist = length(vWorldPos.xz);
         float distFade = 1.0 - smoothstep(8.0, 34.0, dist);
-        // Softly kill very close to the camera too so the grid feels like it's
-        // sliding out from under the chalice rather than crowding the frame.
         float nearFade = smoothstep(0.5, 4.0, dist);
         float alpha = line * distFade * nearFade * uFade;
         gl_FragColor = vec4(uColor, alpha);
@@ -366,14 +311,12 @@ export function initHero(canvas: HTMLCanvasElement) {
     side: THREE.DoubleSide,
   });
 
-  // Floor — below the chalice, extending deep into the scene.
   const floorGeom = new THREE.PlaneGeometry(80, 120);
   const floor = new THREE.Mesh(floorGeom, gridMat);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -2.2;
   scene.add(floor);
 
-  // Ceiling — mirrored above.
   const ceilingGeom = new THREE.PlaneGeometry(80, 120);
   const ceiling = new THREE.Mesh(ceilingGeom, gridMat);
   ceiling.rotation.x = Math.PI / 2;
@@ -382,9 +325,54 @@ export function initHero(canvas: HTMLCanvasElement) {
 
   scene.add(new THREE.AmbientLight(0xffffff, 1));
 
+  // Orbiting content nodes
+  const nodeCount = nodeLabels ? Math.min(nodeLabels.length, NODE_ORBITS.length) : 0;
+  const nodeMeshes: THREE.Mesh[] = [];
+  const nodeMats: THREE.MeshBasicMaterial[] = [];
+  const nodeLines: THREE.Line[] = [];
+  const chaliceWorldCenter = new THREE.Vector3(0, 0.44, 0);
+
+  const nodeLineMat = new THREE.LineBasicMaterial({
+    color: 0xd8ff3a,
+    transparent: true,
+    opacity: 0.18,
+  });
+
+  for (let i = 0; i < nodeCount; i++) {
+    const geom = new THREE.OctahedronGeometry(0.13, 0);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xd8ff3a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    scene.add(mesh);
+    nodeMeshes.push(mesh);
+    nodeMats.push(mat);
+
+    const dotGeom = new THREE.BufferGeometry();
+    dotGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3));
+    const dotMat = new THREE.PointsMaterial({
+      color: 0xd8ff3a,
+      size: 0.06,
+      transparent: true,
+      opacity: 0.9,
+      sizeAttenuation: true,
+      depthWrite: false,
+    });
+    mesh.add(new THREE.Points(dotGeom, dotMat));
+
+    const lineGeom = new THREE.BufferGeometry();
+    lineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+    const line = new THREE.Line(lineGeom, nodeLineMat);
+    scene.add(line);
+    nodeLines.push(line);
+  }
+
+  const projVec = new THREE.Vector3();
   let mouseX = 0;
   let mouseY = 0;
-  let scrollY = 0;
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -399,19 +387,14 @@ export function initHero(canvas: HTMLCanvasElement) {
   resize();
 
   function onMove(e: PointerEvent) {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-    mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
   }
   window.addEventListener('pointermove', onMove, { passive: true });
 
-  function onScroll() {
-    scrollY = window.scrollY;
-  }
-  window.addEventListener('scroll', onScroll, { passive: true });
-
   let raf = 0;
   let t = 0;
+  let elapsed = 0;
   const ROT_SPEED = 0.0035;
   const GRAVITY = 0.6;
   let lastTime = performance.now();
@@ -421,57 +404,74 @@ export function initHero(canvas: HTMLCanvasElement) {
     const current = now ?? performance.now();
     const dt = Math.min(0.05, (current - lastTime) / 1000);
     lastTime = current;
+    elapsed += dt;
 
     if (!reduce.matches) {
-      // Y-axis rotation — the natural axis for a cup on display.
       chalice.rotation.y += ROT_SPEED;
-      // Subtle X wobble and mouse-driven Z lean, no continuous X spin.
       chalice.rotation.x = Math.sin(t * 0.005) * 0.06 - mouseY * 0.05;
       chalice.rotation.z = mouseX * 0.04;
 
-      camera.position.x += (mouseX * 0.18 - camera.position.x) * 0.04;
-      camera.position.y += (-mouseY * 0.1 + 0.05 - camera.position.y) * 0.04;
-      camera.lookAt(0, 0, 0);
+      camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.025;
+      camera.position.y += (-mouseY * 0.2 + 0.15 - camera.position.y) * 0.025;
+      camera.lookAt(0, 0.2, 0);
 
-      const fovOffset = Math.min(scrollY * 0.008, 4);
-      camera.fov = BASE_FOV + fovOffset;
-      camera.updateProjectionMatrix();
-
-      // Particle twinkle on the vertex dots
       particleMat.opacity = 0.4 + 0.35 * Math.sin(t * 0.02);
-
-      // Liquid subtle pulse on opacity (as if the surface catches light)
       liquidMat.opacity = 0.55 + 0.15 * Math.sin(t * 0.015);
 
-      // Drip simulation — advance each point, respawn when it falls off / dies.
-      const pos = dripGeom.attributes.position as THREE.BufferAttribute;
+      // Drip simulation
+      const dPos = dripGeom.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < DRIP_COUNT; i++) {
         dripAges[i] += dt;
         dripVelocities[i] += GRAVITY * dt;
-        const newY = pos.getY(i) - dripVelocities[i] * dt;
-        pos.setY(i, newY);
+        const newY = dPos.getY(i) - dripVelocities[i] * dt;
+        dPos.setY(i, newY);
         if (newY < -1.6 || dripAges[i] > dripLifes[i]) {
           seedDrip(i, false);
-          pos.setXYZ(
-            i,
-            dripPositions[i * 3],
-            dripPositions[i * 3 + 1],
-            dripPositions[i * 3 + 2],
-          );
+          dPos.setXYZ(i, dripPositions[i * 3], dripPositions[i * 3 + 1], dripPositions[i * 3 + 2]);
         }
       }
-      pos.needsUpdate = true;
+      dPos.needsUpdate = true;
 
-      // Polygon glitch — start one on schedule, apply/restore every frame
-      // until its TTL expires.
       if (glitchKind === 'off' && current >= nextGlitchAt) {
         startGlitch(current);
         scheduleNextGlitch(current);
       }
       applyGlitch(current);
 
-      // Scroll the grid corridor forward.
       gridUniforms.uTime.value += dt;
+
+      // Update orbiting nodes
+      const rScale = camera.aspect < 1 ? 0.55 : camera.aspect < 1.4 ? 0.75 : 1.0;
+      for (let i = 0; i < nodeCount; i++) {
+        const o = NODE_ORBITS[i];
+        const angle = o.phase + elapsed * o.speed;
+        const r = o.radius * rScale;
+        const nx = Math.cos(angle) * r;
+        const nz = Math.sin(angle) * r;
+        const ny = o.yOff + Math.sin(elapsed * 0.35 + o.phase * 2) * o.yAmp;
+
+        nodeMeshes[i].position.set(nx, ny, nz);
+        nodeMeshes[i].rotation.y += 0.012;
+        nodeMeshes[i].rotation.x += 0.007;
+        nodeMats[i].opacity = 0.5 + 0.3 * Math.sin(elapsed * 1.2 + i * 1.3);
+
+        const lp = nodeLines[i].geometry.attributes.position as THREE.BufferAttribute;
+        lp.setXYZ(0, chaliceWorldCenter.x, chaliceWorldCenter.y, chaliceWorldCenter.z);
+        lp.setXYZ(1, nx, ny, nz);
+        lp.needsUpdate = true;
+
+        if (nodeLabels && nodeLabels[i]) {
+          projVec.set(nx, ny, nz);
+          projVec.project(camera);
+          const rect = canvas.getBoundingClientRect();
+          const sx = (projVec.x * 0.5 + 0.5) * rect.width;
+          const sy = (-projVec.y * 0.5 + 0.5) * rect.height;
+          nodeLabels[i].style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%)`;
+          if (!nodeLabels[i].classList.contains('is-positioned')) {
+            nodeLabels[i].classList.add('is-positioned');
+          }
+        }
+      }
     }
 
     renderer.render(scene, camera);
@@ -492,7 +492,6 @@ export function initHero(canvas: HTMLCanvasElement) {
     cancelAnimationFrame(raf);
     ro.disconnect();
     window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('scroll', onScroll);
     renderer.dispose();
     chaliceGeom.dispose();
     chaliceMat.dispose();
@@ -509,15 +508,15 @@ export function initHero(canvas: HTMLCanvasElement) {
     floorGeom.dispose();
     ceilingGeom.dispose();
     gridMat.dispose();
+    for (const m of nodeMeshes) {
+      m.geometry.dispose();
+      (m.material as THREE.MeshBasicMaterial).dispose();
+    }
+    for (const l of nodeLines) l.geometry.dispose();
+    nodeLineMat.dispose();
   };
 }
 
-/**
- * Walk the profile and return the outer-wall x coordinate at the given y, if
- * y lies within a segment. Used to place accent band rings on the surface.
- * Scans from the first vertex to the rim (rising-y portion of the profile)
- * so we get the outer wall, not the interior return.
- */
 function profileXAtY(profile: Profile, y: number): number | null {
   let ascending = true;
   let lastY = profile[0][1];
@@ -525,7 +524,6 @@ function profileXAtY(profile: Profile, y: number): number | null {
     const [x0, y0] = profile[i - 1];
     const [x1, y1] = profile[i];
     if (ascending && y1 < lastY) {
-      // We crossed the rim — stop considering further segments (interior wall).
       ascending = false;
       break;
     }
