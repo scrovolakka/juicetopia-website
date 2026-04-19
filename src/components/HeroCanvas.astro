@@ -1,5 +1,7 @@
 ---
 // Hero 3D — client-only Three.js island. Initialized via inline script on idle.
+// When [data-node-idx] elements exist in the DOM, they are passed to initHero
+// so the 3D scene can project orbiting node positions onto them.
 ---
 
 <div class="hero-wrap" aria-hidden="true">
@@ -15,7 +17,6 @@
       role="img"
       aria-label="SACRABOLLA — 聖杯"
     >
-      <!-- half-section silhouette mirrored — SACRABOLLA fallback -->
       <path
         d="M -0.70 1.30 L 0.70 1.30 L 0.72 1.27 L 0.66 1.22 L 0.34 1.14 L 0.22 1.06 L 0.18 0.96 L 0.17 0.88 L 0.22 0.83 L 0.36 0.76 L 0.36 0.62 L 0.22 0.55 L 0.17 0.48 L 0.16 0.40 L 0.22 0.35 L 0.42 0.28 L 0.75 0.12 L 1.00 -0.12 L 1.15 -0.35 L 1.21 -0.52 L 1.23 -0.58 L 1.23 -0.62 L -1.23 -0.62 L -1.23 -0.58 L -1.21 -0.52 L -1.15 -0.35 L -1.00 -0.12 L -0.75 0.12 L -0.42 0.28 L -0.22 0.35 L -0.16 0.40 L -0.17 0.48 L -0.22 0.55 L -0.36 0.62 L -0.36 0.76 L -0.22 0.83 L -0.17 0.88 L -0.18 0.96 L -0.22 1.06 L -0.34 1.14 L -0.66 1.22 L -0.72 1.27 Z"
       />
@@ -28,7 +29,10 @@
   import { initHero } from '~/scripts/hero';
   const el = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
   if (el) {
-    const start = () => initHero(el);
+    const nodeLabels = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-node-idx]'),
+    );
+    const start = () => initHero(el, nodeLabels.length > 0 ? nodeLabels : undefined);
     if ('requestIdleCallback' in window) {
       (window as any).requestIdleCallback(start, { timeout: 1500 });
     } else {
@@ -42,10 +46,6 @@
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
-    /* Width cap and height cap both apply — aspect-ratio keeps the box square,
-       so the browser picks whichever constraint yields the smaller size. This
-       guarantees the chalice never pushes the tagline below the first fold
-       even on tall retina viewports. */
     max-width: min(520px, 88vw);
     max-height: 48vh;
     margin: 0 auto;
