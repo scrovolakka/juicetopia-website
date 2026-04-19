@@ -5,17 +5,7 @@ import Logotype from '~/components/Logotype.astro';
 import { getCollection } from 'astro:content';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const links = [
-  { id: '01', label: 'LEYDA-MONO', href: `${base}/novel/`, jp: '小説' },
-  { id: '02', label: 'MONTRA-MESA', href: `${base}/gallery/`, jp: '絵' },
-  { id: '03', label: 'NOMA-DI MOKURO', href: `${base}/characters/`, jp: '人物' },
-  { id: '04', label: 'MONDO-DI NOTA', href: `${base}/mondo/`, jp: '世界注' },
-  { id: '05', label: 'LEKSIKO', href: `${base}/lexicon/`, jp: '辞書' },
-];
 
-// "Now" strip data — every piece below is computed at build time from the
-// content collections. No manual bookkeeping: each deploy re-reads the
-// filesystem, picks the freshest dated entries, and updates the stamp.
 const [novel, gallery, characters, codex, lexicon, cronika] = await Promise.all([
   getCollection('novel'),
   getCollection('gallery'),
@@ -25,445 +15,282 @@ const [novel, gallery, characters, codex, lexicon, cronika] = await Promise.all(
   getCollection('cronika'),
 ]);
 
+const pad = (n: number) => String(n).padStart(2, '0');
+const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '.');
+
+const nodes = [
+  { count: pad(novel.length), label: 'LEYDA', jp: '章', href: `${base}/novel/` },
+  { count: pad(gallery.length), label: 'PANA', jp: '画', href: `${base}/gallery/` },
+  { count: pad(characters.length), label: 'NOMA', jp: '人', href: `${base}/characters/` },
+  { count: pad(codex.length), label: 'MONDO', jp: '注', href: `${base}/mondo/` },
+  { count: pad(lexicon.length), label: 'LEKSIKO', jp: '語', href: `${base}/lexicon/` },
+];
+
 const latestChapter = novel
   .slice()
   .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())[0];
-const latestImage = gallery
-  .slice()
-  .sort((a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime())[0];
 const latestCronika = cronika
   .slice()
   .sort((a, b) => b.data.loggedAt.getTime() - a.data.loggedAt.getTime())[0];
 
-// Pick a "random" lexicon term using a deterministic rotation based on build day
-// (so the same page render shows the same term, but it changes daily in CI).
-const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-const lexPick = lexicon[day % lexicon.length];
-
-const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '.');
-const pad = (n: number) => String(n).padStart(2, '0');
-
-// "Last update" pulls from every dated collection so any addition — a chapter,
-// an image, or an editor's log entry — bumps the stamp.
 const lastUpdateDate = [
   latestChapter?.data.publishedAt,
-  latestImage?.data.createdAt,
   latestCronika?.data.loggedAt,
 ].filter(Boolean).sort((a: any, b: any) => b.getTime() - a.getTime())[0] as Date | undefined;
 const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
-
-const kindLabel: Record<string, string> = {
-  add: '追加',
-  fix: '修繕',
-  note: '手記',
-  release: '公刊',
-};
-
-const stats = [
-  { k: 'LEYDA', n: novel.length, jp: '章' },
-  { k: 'PANA', n: gallery.length, jp: '画' },
-  { k: 'NOMA', n: characters.length, jp: '人' },
-  { k: 'MONDO', n: codex.length, jp: '注' },
-  { k: 'LEKSIKO', n: lexicon.length, jp: '語' },
-];
 ---
 
 <BaseLayout mode="void" showRouteIndex={false}>
-  <section class="index-hero">
-    <div class="hero-meta mono" data-reveal>
-      <span>[00 / MOKURO]</span>
-      <span class="sep">·</span>
-      <span>VOLA 001</span>
-    </div>
-
-    <div class="wordmark-stage" data-reveal>
-      <Logotype size="hero" href={`${base}/`} />
-    </div>
-
-    <div class="hero-stage" data-reveal>
+  <section class="ix">
+    <div class="ix-canvas">
       <HeroCanvas />
     </div>
 
-    <p class="tagline" data-reveal>
-      <span class="jp">電子果汁アーカイブ</span>
-      <span class="en mono">pana-di leyda-mono & montra-mesa — norma-tak, manka-kel.</span>
-    </p>
+    <div class="ix-center" data-reveal>
+      <div class="ix-meta mono">
+        <span>[00 / MOKURO]</span>
+        <span class="sep">·</span>
+        <span>VOLA 001</span>
+      </div>
+      <Logotype size="hero" href={`${base}/`} />
+      <p class="ix-tagline">
+        <span class="jp">電子果汁アーカイブ</span>
+      </p>
+    </div>
 
-    <nav class="index-links" aria-label="Banda">
-      <ul>
-        {
-          links.map((l) => (
-            <li>
-              <a class="index-link" href={l.href}>
-                <span class="n">[{l.id}]</span>
-                <span class="l">{l.label}</span>
-                <span class="jp">{l.jp}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+    <nav class="ix-nodes" id="node-nav" aria-label="Banda">
+      {nodes.map((n, i) => (
+        <a class="ix-node" data-node-idx={i} href={n.href}>
+          <span class="ix-node-count">{n.count}</span>
+          <span class="ix-node-label">{n.label}</span>
+          <span class="ix-node-jp">{n.jp}</span>
+        </a>
+      ))}
     </nav>
 
-    <section class="now" aria-label="Current" data-reveal>
-      <header class="now-head mono">
-        <span class="now-label">
-          <span class="now-dot" aria-hidden="true"></span>
-          <span>NUN · 現</span>
-        </span>
-        <span class="now-date">{lastUpdateStr}</span>
-      </header>
-
-      <div class="now-grid">
-        {latestChapter && (
-          <a class="now-cell" href={`${base}/novel/${latestChapter.slug}/`}>
-            <span class="now-k mono">
-              <span class="acid">+</span> LEYDA-MONO · ST.{pad(latestChapter.data.chapterNumber)}
-            </span>
-            <span class="now-jp">{latestChapter.data.title}</span>
-            {latestChapter.data.summary && (
-              <span class="now-sum">{latestChapter.data.summary}</span>
-            )}
-            <span class="now-meta mono meta-dim">
-              {fmt(latestChapter.data.publishedAt)}
-              {latestChapter.data.series && (
-                <>
-                  <span class="sep">·</span>
-                  <span>{latestChapter.data.series}</span>
-                </>
-              )}
-            </span>
+    <div class="ix-strip mono">
+      <span class="ix-strip-dot" aria-hidden="true"></span>
+      <span>NUN</span>
+      <span class="sep">·</span>
+      <span>{lastUpdateStr}</span>
+      {latestChapter && (
+        <>
+          <span class="sep">·</span>
+          <a href={`${base}/novel/${latestChapter.slug}/`}>
+            ST.{pad(latestChapter.data.chapterNumber)}「{latestChapter.data.title}」
           </a>
-        )}
-
-        {latestImage && (
-          <a class="now-cell" href={`${base}/gallery/${latestImage.slug}/`}>
-            <span class="now-k mono">
-              <span class="acid">+</span> MONTRA-MESA
-            </span>
-            <span class="now-jp">{latestImage.data.title}</span>
-            <span class="now-meta mono meta-dim">
-              {fmt(latestImage.data.createdAt)}
-              <span class="sep">·</span>
-              <span>{latestImage.data.medium}</span>
-            </span>
+        </>
+      )}
+      {latestCronika && (
+        <>
+          <span class="sep">·</span>
+          <a href={`${base}/cronika/#${latestCronika.slug}`}>
+            {latestCronika.data.title}
           </a>
-        )}
+        </>
+      )}
+    </div>
 
-        {latestCronika && (
-          <a class="now-cell" href={`${base}/cronika/#${latestCronika.slug}`}>
-            <span class="now-k mono">
-              <span class="acid">·</span> CRONIKA · {kindLabel[latestCronika.data.kind] ?? '手記'}
-            </span>
-            <span class="now-jp">{latestCronika.data.title}</span>
-            <span class="now-meta mono meta-dim">
-              {fmt(latestCronika.data.loggedAt)}
-              <span class="sep">·</span>
-              <span>{latestCronika.data.entryId}</span>
-            </span>
-          </a>
-        )}
-
-        {lexPick && (
-          <a class="now-cell" href={`${base}/lexicon/#${lexPick.slug}`}>
-            <span class="now-k mono">
-              <span class="acid">∞</span> LEKSIKO · DU JORNA
-            </span>
-            <span class="now-jp word-pick">{lexPick.data.word}</span>
-            <span class="now-sum">{lexPick.data.gloss}</span>
-            {lexPick.data.definition && (
-              <span class="now-meta mono meta-dim">{lexPick.data.definition.slice(0, 60)}…</span>
-            )}
-          </a>
-        )}
-      </div>
-
-      <ul class="now-stats mono" aria-label="Counts">
-        {stats.map((s) => (
-          <li class="stat">
-            <span class="stat-n" data-count-up>{pad(s.n)}</span>
-            <span class="stat-k">{s.k}</span>
-            <span class="stat-jp">{s.jp}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <div class="ix-foot mono">
+      <span>JCT</span>
+      <span class="sep">·</span>
+      <span>PANA-DI-BANDA-KA-FORNA-MODA-NE-NEK</span>
+    </div>
   </section>
 </BaseLayout>
 
-<script>
-  import '~/scripts/count-up';
-</script>
-
 <style>
-  .index-hero {
-    max-width: var(--max-page);
-    margin-inline: auto;
-    display: grid;
-    /* Compress vertical rhythm so the first fold (meta → wordmark → chalice →
-       tagline) fits within a retina viewport height. The links / NOW strip
-       below may fall beyond the fold and that's intentional. */
-    gap: clamp(1rem, 2.4vh, 3rem);
-    padding-block: clamp(1.25rem, 3.5vh, 4rem);
+  :global(body) {
+    overflow: hidden;
+    height: 100dvh;
   }
-  .hero-meta {
+  :global(.site-footer) {
+    display: none;
+  }
+  :global(#main.page) {
+    padding: 0;
+    margin: 0;
+  }
+
+  .ix {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    overflow: hidden;
+  }
+
+  .ix-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .ix-canvas :global(.hero-wrap) {
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ix-center {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    pointer-events: none;
+    grid-row: 1;
+    align-self: center;
+  }
+  .ix-center :global(.logo) {
+    pointer-events: auto;
+  }
+
+  .ix-meta {
     display: flex;
     gap: 0.5em;
-    justify-content: center;
     color: var(--color-ink-muted);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.18em;
   }
-  .hero-meta .sep {
+  .ix-meta .sep {
     color: var(--color-acid-ink);
   }
-  .wordmark-stage {
-    display: grid;
-    place-items: center;
-    text-align: center;
+
+  .ix-tagline .jp {
+    font-family: var(--font-mincho);
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
   }
-  .hero-stage {
-    display: grid;
-    place-items: center;
-    position: relative;
-  }
-  .hero-stage::after {
-    content: '';
+
+  .ix-nodes {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 30%;
-    background: linear-gradient(to top, var(--color-bg), transparent);
+    inset: 0;
+    z-index: 2;
     pointer-events: none;
   }
-  .tagline {
+
+  .ix-node {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
     align-items: center;
+    gap: 0.1em;
+    padding: var(--space-2) var(--space-3);
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.4s ease, filter 0.2s ease;
     text-align: center;
+    cursor: pointer;
+    will-change: transform;
   }
-  .tagline .jp {
-    font-family: var(--font-mincho);
-    font-size: 1.25rem;
-    letter-spacing: 0.08em;
-    color: var(--color-ink);
+  .ix-node.is-positioned {
+    opacity: 1;
   }
-  .tagline .en {
-    color: var(--color-ink-muted);
-    font-size: var(--fs-meta);
+  .ix-node:hover {
+    filter: drop-shadow(0 0 8px var(--color-acid-dim));
   }
-  .index-links ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--color-rule);
-    border-top: 1px solid var(--color-rule);
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .index-link {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-8) var(--space-4);
-    background: var(--color-bg);
-    text-align: center;
-    transition: background var(--dur-mid) var(--ease-out);
-  }
-  .index-link:hover,
-  .index-link:focus-visible {
-    background: color-mix(in srgb, var(--color-bg) 88%, var(--color-acid) 12%);
-  }
-  .index-link .n {
-    font-family: var(--font-mono);
-    font-size: var(--fs-meta);
-    letter-spacing: var(--ls-meta);
+  .ix-node:hover .ix-node-label {
     color: var(--color-acid-ink);
   }
-  .index-link .l {
+
+  .ix-node-count {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    line-height: 1;
+    color: var(--color-acid);
+  }
+  .ix-node-label {
     font-family: var(--font-mono);
-    font-size: 1.25rem;
-    letter-spacing: 0.1em;
-    color: var(--color-ink);
-  }
-  .index-link .jp {
-    font-family: var(--font-mincho);
-    font-size: 0.875rem;
+    font-size: 0.6rem;
     letter-spacing: 0.2em;
-    color: var(--color-ink-muted);
-  }
-
-  .index-links ul {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  @media (max-width: 64rem) {
-    .index-links ul {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (max-width: 48rem) {
-    .index-links ul {
-      grid-template-columns: 1fr;
-    }
-    .index-link {
-      padding: var(--space-6) var(--space-4);
-    }
-  }
-
-  /* ============================================================
-     NOW · 現 — activity strip
-     ============================================================ */
-  .now {
-    display: grid;
-    gap: var(--space-6);
-    border-top: 1px solid var(--color-rule);
-    padding-top: var(--space-6);
-  }
-  .now-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-4);
-    font-size: var(--fs-meta);
-    letter-spacing: 0.18em;
-    color: var(--color-ink-muted);
-  }
-  .now-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em;
     color: var(--color-ink);
+    transition: color var(--dur-fast) var(--ease-out);
   }
-  .now-dot {
-    width: 0.5em;
-    height: 0.5em;
+  .ix-node-jp {
+    font-family: var(--font-mincho);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--color-ink-muted);
+  }
+
+  .ix-strip {
+    position: relative;
+    z-index: 3;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: var(--space-2) var(--page-pad);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.12em;
+    color: var(--color-ink-muted);
+    border-top: 1px solid var(--color-rule);
+    background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .ix-strip a {
+    color: var(--color-ink);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .ix-strip a:hover {
+    color: var(--color-acid-ink);
+  }
+  .ix-strip .sep {
+    color: var(--color-acid-ink);
+  }
+  .ix-strip-dot {
+    width: 0.4em;
+    height: 0.4em;
     border-radius: 50%;
     background: var(--color-acid);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-acid) 25%, transparent);
-    animation: now-pulse 2.6s ease-in-out infinite;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acid) 25%, transparent);
+    animation: strip-pulse 2.6s ease-in-out infinite;
   }
-  @keyframes now-pulse {
-    0%, 100% {
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-acid) 25%, transparent);
-    }
-    50% {
-      box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-acid) 8%, transparent);
-    }
+  @keyframes strip-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acid) 25%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-acid) 8%, transparent); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .now-dot {
-      animation: none;
-    }
+    .ix-strip-dot { animation: none; }
   }
 
-  .now-grid {
-    display: grid;
-    /* auto-fit so the strip gracefully adapts to 3 or 4 cells (or more,
-       if future cells are added). Min cell width keeps text readable. */
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1px;
-    background: var(--color-rule);
-    border: 1px solid var(--color-rule);
-  }
-  @media (max-width: 48rem) {
-    .now-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  .now-cell {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-5) var(--space-4);
-    background: var(--color-bg);
-    transition: background var(--dur-mid) var(--ease-out);
-  }
-  .now-cell:hover,
-  .now-cell:focus-visible {
-    background: color-mix(in srgb, var(--color-bg) 88%, var(--color-acid) 12%);
-  }
-  .now-k {
-    font-size: var(--fs-meta);
-    letter-spacing: 0.14em;
-    color: var(--color-ink-muted);
-    display: inline-flex;
-    gap: 0.4em;
-  }
-  .now-k .acid {
-    color: var(--color-acid-ink);
-  }
-  .now-jp {
-    font-family: var(--font-mincho);
-    font-size: 1.125rem;
-    letter-spacing: 0.03em;
-    color: var(--color-ink);
-  }
-  .now-jp.word-pick {
-    font-family: var(--font-mono);
-    letter-spacing: 0.08em;
-    font-size: 1rem;
-  }
-  .now-sum {
-    font-family: var(--font-mincho);
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: var(--color-ink-muted);
-  }
-  .now-meta {
-    font-size: var(--fs-meta);
-    letter-spacing: 0.1em;
-    color: var(--color-ink-muted);
-  }
-  .now-meta .sep {
-    color: var(--color-acid-ink);
-    margin-inline: 0.4em;
-  }
-
-  .now-stats {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1px;
-    background: var(--color-rule);
-    border-top: 1px solid var(--color-rule);
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .stat {
+  .ix-foot {
+    position: relative;
+    z-index: 3;
+    grid-row: 3;
     display: flex;
-    flex-direction: column;
-    gap: 0.2em;
     align-items: center;
-    padding: var(--space-4) var(--space-2);
-    background: var(--color-bg);
-    text-align: center;
-  }
-  .stat-n {
-    font-family: var(--font-display);
-    font-size: clamp(1.75rem, 4vw, 2.75rem);
-    line-height: 1;
-    color: var(--color-ink);
-    letter-spacing: -0.02em;
-  }
-  .stat-k {
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.18em;
-    color: var(--color-acid-ink);
-  }
-  .stat-jp {
-    font-family: var(--font-mincho);
-    font-size: 0.75rem;
+    justify-content: center;
+    gap: 0.4em;
+    padding: var(--space-1) var(--page-pad) var(--space-2);
+    font-size: 0.55rem;
     letter-spacing: 0.2em;
     color: var(--color-ink-muted);
+    background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
-  @media (max-width: 48rem) {
-    .now-stats {
-      grid-template-columns: repeat(5, 1fr);
+  .ix-foot .sep {
+    color: var(--color-acid-ink);
+  }
+
+  @media (max-width: 640px) {
+    .ix-node-count { font-size: 1.1rem; }
+    .ix-node-label { font-size: 0.5rem; }
+    .ix-node-jp { font-size: 0.6rem; }
+    .ix-strip {
+      font-size: 0.55rem;
+      flex-wrap: wrap;
+      gap: 0.3em;
     }
   }
 </style>
