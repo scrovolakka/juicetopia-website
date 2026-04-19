@@ -43,11 +43,11 @@ const CHALICE_PROFILE: Profile = [
 const BAND_YS = [0.62, 0.58, -0.69, -1.27];
 
 const NODE_ORBITS = [
-  { radius: 3.2, speed: 0.18, yOff: 0.6, phase: 0, yAmp: 0.20 },
-  { radius: 3.7, speed: -0.14, yOff: -0.15, phase: Math.PI * 0.4, yAmp: 0.25 },
-  { radius: 2.8, speed: 0.22, yOff: 0.1, phase: Math.PI * 0.8, yAmp: 0.15 },
-  { radius: 3.5, speed: -0.16, yOff: -0.5, phase: Math.PI * 1.2, yAmp: 0.22 },
-  { radius: 3.0, speed: 0.20, yOff: 0.4, phase: Math.PI * 1.6, yAmp: 0.18 },
+  { radius: 4.4, speed: 0.070, yOff: 0.9, phase: 0, yAmp: 0.20 },
+  { radius: 4.9, speed: -0.055, yOff: -0.25, phase: Math.PI * 0.4, yAmp: 0.25 },
+  { radius: 4.2, speed: 0.085, yOff: 0.15, phase: Math.PI * 0.8, yAmp: 0.15 },
+  { radius: 4.7, speed: -0.062, yOff: -0.75, phase: Math.PI * 1.2, yAmp: 0.22 },
+  { radius: 4.5, speed: 0.078, yOff: 0.65, phase: Math.PI * 1.6, yAmp: 0.18 },
 ];
 
 function buildChaliceGeometry(): THREE.LatheGeometry {
@@ -82,8 +82,8 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
     side: THREE.DoubleSide,
   });
   const chalice = new THREE.Mesh(chaliceGeom, chaliceMat);
-  chalice.scale.set(1.18, 1.32, 1.18);
-  chalice.position.y = 0.44;
+  chalice.scale.set(0.78, 0.86, 0.78);
+  chalice.position.y = -0.80;
   scene.add(chalice);
 
   // Vertex particles — chartreuse dots on wireframe vertices
@@ -258,23 +258,23 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   chalice.add(drips);
 
   // Halo ring
-  const ringGeom = new THREE.RingGeometry(2.55, 2.58, 64);
+  const ringGeom = new THREE.RingGeometry(1.55, 1.57, 64);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xd8ff3a,
     transparent: true,
-    opacity: 0.22,
+    opacity: 0.18,
     side: THREE.DoubleSide,
   });
   const ring = new THREE.Mesh(ringGeom, ringMat);
-  ring.position.set(0, 0.22, -1);
+  ring.position.set(0, -0.55, -1);
   scene.add(ring);
 
   // Grid corridor
   const gridUniforms = {
     uTime: { value: 0 },
     uColor: { value: new THREE.Color(0xd8ff3a) },
-    uFade: { value: 0.55 },
-    uScroll: { value: 2.2 },
+    uFade: { value: 0.22 },
+    uScroll: { value: 0.8 },
   };
   const gridMat = new THREE.ShaderMaterial({
     uniforms: gridUniforms,
@@ -317,12 +317,6 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   floor.position.y = -2.2;
   scene.add(floor);
 
-  const ceilingGeom = new THREE.PlaneGeometry(80, 120);
-  const ceiling = new THREE.Mesh(ceilingGeom, gridMat);
-  ceiling.rotation.x = Math.PI / 2;
-  ceiling.position.y = 3.4;
-  scene.add(ceiling);
-
   scene.add(new THREE.AmbientLight(0xffffff, 1));
 
   // Orbiting content nodes
@@ -330,13 +324,9 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   const nodeMeshes: THREE.Mesh[] = [];
   const nodeMats: THREE.MeshBasicMaterial[] = [];
   const nodeLines: THREE.Line[] = [];
-  const chaliceWorldCenter = new THREE.Vector3(0, 0.44, 0);
+  const chaliceWorldCenter = new THREE.Vector3(0, -0.45, 0);
 
-  const nodeLineMat = new THREE.LineBasicMaterial({
-    color: 0xd8ff3a,
-    transparent: true,
-    opacity: 0.18,
-  });
+  const nodeLineMats: THREE.LineBasicMaterial[] = [];
 
   for (let i = 0; i < nodeCount; i++) {
     const geom = new THREE.OctahedronGeometry(0.13, 0);
@@ -363,11 +353,17 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
     });
     mesh.add(new THREE.Points(dotGeom, dotMat));
 
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0xd8ff3a,
+      transparent: true,
+      opacity: 0.18,
+    });
     const lineGeom = new THREE.BufferGeometry();
     lineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-    const line = new THREE.Line(lineGeom, nodeLineMat);
+    const line = new THREE.Line(lineGeom, lineMat);
     scene.add(line);
     nodeLines.push(line);
+    nodeLineMats.push(lineMat);
   }
 
   const projVec = new THREE.Vector3();
@@ -386,11 +382,26 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   ro.observe(canvas);
   resize();
 
+  let mouseClientX = -1e4;
+  let mouseClientY = -1e4;
   function onMove(e: PointerEvent) {
     mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
     mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    mouseClientX = e.clientX;
+    mouseClientY = e.clientY;
   }
   window.addEventListener('pointermove', onMove, { passive: true });
+  window.addEventListener('pointerleave', () => {
+    mouseClientX = -1e4;
+    mouseClientY = -1e4;
+  });
+
+  let converge = 0;
+  const PENT_RADIUS = 1.55;
+  const PENT_PHASE = -Math.PI / 2;
+  const ringWorldRadius = 1.55;
+  const ringEdgeVec = new THREE.Vector3();
+  const chalProjVec = new THREE.Vector3();
 
   let raf = 0;
   let t = 0;
@@ -442,18 +453,55 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
 
       // Update orbiting nodes
       const rScale = camera.aspect < 1 ? 0.55 : camera.aspect < 1.4 ? 0.75 : 1.0;
+
+      // Convergence: when the pointer is inside the halo ring, nodes pull into
+      // a pentagon around the chalice. Outside, they resume free orbit.
+      const rect = canvas.getBoundingClientRect();
+      chalProjVec.copy(chaliceWorldCenter).project(camera);
+      const chalSX = (chalProjVec.x * 0.5 + 0.5) * rect.width + rect.left;
+      const chalSY = (-chalProjVec.y * 0.5 + 0.5) * rect.height + rect.top;
+      ringEdgeVec
+        .set(chaliceWorldCenter.x + ringWorldRadius, chaliceWorldCenter.y, chaliceWorldCenter.z)
+        .project(camera);
+      const ringSX = (ringEdgeVec.x * 0.5 + 0.5) * rect.width + rect.left;
+      const ringRadiusPx = Math.max(60, Math.abs(ringSX - chalSX));
+      const mdx = mouseClientX - chalSX;
+      const mdy = mouseClientY - chalSY;
+      const mouseDist = Math.sqrt(mdx * mdx + mdy * mdy);
+      const convergeTarget = mouseDist < ringRadiusPx ? 1 : 0;
+      converge += (convergeTarget - converge) * Math.min(1, dt * 4);
+
       for (let i = 0; i < nodeCount; i++) {
         const o = NODE_ORBITS[i];
         const angle = o.phase + elapsed * o.speed;
         const r = o.radius * rScale;
-        const nx = Math.cos(angle) * r;
-        const nz = Math.sin(angle) * r;
-        const ny = o.yOff + Math.sin(elapsed * 0.35 + o.phase * 2) * o.yAmp;
+        const orbitX = Math.cos(angle) * r;
+        const orbitZ = Math.sin(angle) * r;
+        const orbitY = o.yOff + Math.sin(elapsed * 0.15 + o.phase * 2) * o.yAmp;
+
+        const pentAngle = PENT_PHASE + (i / nodeCount) * Math.PI * 2;
+        const pentX = chaliceWorldCenter.x + Math.cos(pentAngle) * PENT_RADIUS;
+        const pentY = chaliceWorldCenter.y + Math.sin(pentAngle) * PENT_RADIUS;
+        const pentZ = chaliceWorldCenter.z;
+
+        const nx = orbitX + (pentX - orbitX) * converge;
+        const ny = orbitY + (pentY - orbitY) * converge;
+        const nz = orbitZ + (pentZ - orbitZ) * converge;
 
         nodeMeshes[i].position.set(nx, ny, nz);
         nodeMeshes[i].rotation.y += 0.012;
         nodeMeshes[i].rotation.x += 0.007;
-        nodeMats[i].opacity = 0.5 + 0.3 * Math.sin(elapsed * 1.2 + i * 1.3);
+
+        projVec.set(nx, ny, nz);
+        projVec.project(camera);
+        // Logo avoidance: fade nodes crossing the central logo zone (NDC ellipse).
+        const dx = projVec.x / 0.42;
+        const dy = projVec.y / 0.16;
+        const rNorm = Math.sqrt(dx * dx + dy * dy);
+        const avoid = Math.min(1, Math.max(0, (rNorm - 0.85) / 0.35));
+        const pulse = 0.5 + 0.3 * Math.sin(elapsed * 1.2 + i * 1.3);
+        nodeMats[i].opacity = pulse * avoid;
+        nodeLineMats[i].opacity = 0.18 * avoid;
 
         const lp = nodeLines[i].geometry.attributes.position as THREE.BufferAttribute;
         lp.setXYZ(0, chaliceWorldCenter.x, chaliceWorldCenter.y, chaliceWorldCenter.z);
@@ -461,12 +509,11 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
         lp.needsUpdate = true;
 
         if (nodeLabels && nodeLabels[i]) {
-          projVec.set(nx, ny, nz);
-          projVec.project(camera);
           const rect = canvas.getBoundingClientRect();
           const sx = (projVec.x * 0.5 + 0.5) * rect.width;
           const sy = (-projVec.y * 0.5 + 0.5) * rect.height;
           nodeLabels[i].style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%)`;
+          nodeLabels[i].style.opacity = String(avoid);
           if (!nodeLabels[i].classList.contains('is-positioned')) {
             nodeLabels[i].classList.add('is-positioned');
           }
@@ -506,7 +553,6 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
     ringGeom.dispose();
     ringMat.dispose();
     floorGeom.dispose();
-    ceilingGeom.dispose();
     gridMat.dispose();
     for (const m of nodeMeshes) {
       m.geometry.dispose();

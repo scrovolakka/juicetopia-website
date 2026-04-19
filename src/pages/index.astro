@@ -46,7 +46,7 @@ const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
       <HeroCanvas />
     </div>
 
-    <div class="ix-center" data-reveal>
+    <div class="ix-center">
       <div class="ix-meta mono">
         <span>[00 / MOKURO]</span>
         <span class="sep">·</span>
@@ -110,6 +110,7 @@ const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
   :global(#main.page) {
     padding: 0;
     margin: 0;
+    animation: none;
   }
 
   .ix {
@@ -143,7 +144,8 @@ const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
     gap: var(--space-3);
     pointer-events: none;
     grid-row: 1;
-    align-self: center;
+    align-self: start;
+    padding-top: clamp(3rem, 8vh, 7rem);
   }
   .ix-center :global(.logo) {
     pointer-events: auto;
@@ -185,7 +187,7 @@ const lastUpdateStr = lastUpdateDate ? fmt(lastUpdateDate) : '—';
     padding: var(--space-2) var(--space-3);
     pointer-events: auto;
     opacity: 0;
-    transition: opacity 0.4s ease, filter 0.2s ease;
+    transition: filter 0.2s ease;
     text-align: center;
     cursor: pointer;
     will-change: transform;
