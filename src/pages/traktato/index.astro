@@ -1,9 +1,11 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { assertUniqueIds } from '~/utils/assert-unique-ids';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const all = await getCollection('traktato');
+assertUniqueIds(all, 'paperId', 'traktato');
 // Sort by explicit order, then by publishedAt descending as tiebreak.
 const entries = all.sort((a, b) => {
   if (a.data.order !== b.data.order) return a.data.order - b.data.order;
@@ -70,7 +72,7 @@ const sections = kindOrder
               {sec.items.map((e) => {
                 const href = `${base}/traktato/${e.slug}/`;
                 return (
-                  <li class="entry">
+                  <li class="entry" data-reveal>
                     <a class="entry-link" href={href}>
                       <span class="entry-id mono">{e.data.paperId}</span>
                       <div class="entry-body">

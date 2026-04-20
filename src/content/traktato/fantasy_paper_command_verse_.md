@@ -1,7 +1,7 @@
 ---
 title: 奉杯ジュース規格 第十四版
 label: "FANTASY PAPER: COMMAND VERSE"
-paperId: T.001
+paperId: T.003
 kind: paper
 layout: single
 abstract: >
