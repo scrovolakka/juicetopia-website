@@ -7,6 +7,7 @@ import '~/styles/utilities.css';
 import SiteHeader from '~/components/SiteHeader.astro';
 import SiteFooter from '~/components/SiteFooter.astro';
 import RouteIndex from '~/components/RouteIndex.astro';
+import FruitBackground from '~/components/FruitBackground.astro';
 import { modeFor, routeIndex } from '~/lib/nav';
 
 interface Props {
@@ -25,6 +26,7 @@ const pageTitle = title ? `${title} — juicetopia` : 'juicetopia';
 const desc = description ?? 'juicetopia — an archive of fiction and images.';
 const current = routeIndex(path);
 const grainHref = `${base}/grain.svg`;
+const showFruitBackground = path !== '/';
 ---
 
 <!doctype html>
@@ -54,6 +56,7 @@ const grainHref = `${base}/grain.svg`;
     <div class="fx-scanlines" aria-hidden="true"></div>
     <div class="fx-grain" aria-hidden="true"></div>
     <div id="fx-sweep" class="fx-sweep" aria-hidden="true"></div>
+    {showFruitBackground && <FruitBackground />}
 
     <SiteHeader />
 

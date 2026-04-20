@@ -31,6 +31,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const pad = (n: number) => String(n).padStart(4, '0');
 const date = entry.data.createdAt.toISOString().slice(0, 10).replace(/-/g, '.');
 const { Content } = await entry.render();
+const prevHref = prev ? `${base}/gallery/${prev.slug}/` : '';
+const nextHref = next ? `${base}/gallery/${next.slug}/` : '';
 ---
 
 <BaseLayout title={`${entry.data.title} / GALLERY`} mode="void" showRouteIndex={false}>
@@ -39,33 +41,35 @@ const { Content } = await entry.render();
       <p class="mono">[02 / GALLERY] · V.{pad(index)} / {pad(total)}</p>
     </header>
 
-    <div class="image-frame">
-      <Image
-        src={entry.data.image}
-        alt={entry.data.alt}
-        class="image"
-        widths={[640, 960, 1280]}
-        sizes="(min-width: 72rem) 900px, 90vw"
-      />
-    </div>
+    <div class="main">
+      <div class="image-frame">
+        <Image
+          src={entry.data.image}
+          alt={entry.data.alt}
+          class="image"
+          widths={[960, 1280, 1600]}
+          sizes="(min-width: 72rem) 74vw, 96vw"
+        />
+      </div>
 
-    <div class="caption">
-      <h1 class="title">{entry.data.title}</h1>
-      <dl class="mono">
-        <div><dt>DATE</dt><dd>{date}</dd></div>
-        <div><dt>MEDIUM</dt><dd>{entry.data.medium}</dd></div>
-        {entry.data.dimensions && (<div><dt>DIM</dt><dd>{entry.data.dimensions}</dd></div>)}
-      </dl>
-      <div class="note">
-        <Content />
+      <div class="caption">
+        <h1 class="title">{entry.data.title}</h1>
+        <dl class="mono">
+          <div><dt>DATE</dt><dd>{date}</dd></div>
+          <div><dt>MEDIUM</dt><dd>{entry.data.medium}</dd></div>
+          {entry.data.dimensions && (<div><dt>DIM</dt><dd>{entry.data.dimensions}</dd></div>)}
+        </dl>
+        <div class="note">
+          <Content />
+        </div>
       </div>
     </div>
 
-    <nav class="pager" aria-label="Image navigation">
+    <nav class="pager" aria-label="Image navigation" data-prev={prevHref} data-next={nextHref}>
       <div class="slot">
         {
           prev ? (
-            <a class="acid-link mono" href={`${base}/gallery/${prev.slug}/`}>
+            <a class="acid-link mono" href={prevHref}>
               <span class="acid">[←]</span> V.{pad(index - 1)}
             </a>
           ) : (
@@ -79,7 +83,7 @@ const { Content } = await entry.render();
       <div class="slot right">
         {
           next ? (
-            <a class="acid-link mono" href={`${base}/gallery/${next.slug}/`}>
+            <a class="acid-link mono" href={nextHref}>
               V.{pad(index + 1)} <span class="acid">[→]</span>
             </a>
           ) : (
@@ -91,18 +95,44 @@ const { Content } = await entry.render();
   </article>
 </BaseLayout>
 
+<script>
+  const pager = document.querySelector('.pager');
+  const prevHref = pager?.getAttribute('data-prev') ?? '';
+  const nextHref = pager?.getAttribute('data-next') ?? '';
+
+  document.addEventListener('keydown', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if (e.key === 'ArrowLeft' && prevHref) location.assign(prevHref);
+    if (e.key === 'ArrowRight' && nextHref) location.assign(nextHref);
+  });
+</script>
+
 <style>
   .detail {
     display: grid;
     gap: var(--space-8);
   }
+  .main {
+    display: grid;
+    gap: var(--space-8);
+    align-items: start;
+  }
+  @media (min-width: 72rem) {
+    .main {
+      grid-template-columns: minmax(0, 1fr) 18rem;
+      gap: var(--space-12);
+    }
+  }
   .image-frame {
     border: 1px solid var(--color-rule);
     background: #050504;
     overflow: hidden;
-    max-width: 960px;
+    max-width: 1200px;
     margin-inline: auto;
     width: 100%;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.16);
   }
   .image {
     width: 100%;
@@ -110,11 +140,17 @@ const { Content } = await entry.render();
     display: block;
   }
   .caption {
-    max-width: var(--max-reading);
-    margin-inline: auto;
     display: grid;
     gap: var(--space-4);
     width: 100%;
+    align-content: start;
+  }
+  @media (min-width: 72rem) {
+    .caption {
+      position: sticky;
+      top: calc(var(--space-section) + var(--space-2));
+      align-self: start;
+    }
   }
   .title {
     font-family: var(--font-mono);

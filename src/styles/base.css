@@ -172,4 +172,11 @@ ruby rp {
 .page {
   padding-inline: var(--page-pad);
   padding-block: var(--space-section) var(--space-16);
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer {
+  position: relative;
+  z-index: 1;
 }
