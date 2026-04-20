@@ -278,6 +278,29 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
     color: var(--color-acid-ink);
   }
 
+  /* Mid-width: collapse labels, show only [ID]; hover to reveal label */
+  @media (max-width: 75rem) and (min-width: 48.0625rem) {
+    .nav-link .l {
+      display: inline-block;
+      max-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      vertical-align: baseline;
+      transition: max-width var(--dur-mid) var(--ease-out);
+    }
+    .nav-link:hover .l,
+    .nav-link:focus-visible .l,
+    .nav-link.is-current .l {
+      max-width: 14em;
+    }
+    .nav ul {
+      gap: var(--space-2);
+    }
+    .right {
+      display: none;
+    }
+  }
+
   @media (max-width: 48rem) {
     .bar {
       grid-template-columns: auto 1fr auto;

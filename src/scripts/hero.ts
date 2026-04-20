@@ -110,6 +110,31 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   const particles = new THREE.Points(particleGeom, particleMat);
   chalice.add(particles);
 
+  // Sphere morph targets — project each chalice vertex onto a unit sphere
+  const sphereTargets = new Float32Array((positions.array as Float32Array).length);
+  {
+    const arr = positions.array as Float32Array;
+    const SPHERE_R = 1.25;
+    for (let i = 0; i < arr.length; i += 3) {
+      const x = arr[i], y = arr[i + 1], z = arr[i + 2];
+      const len = Math.sqrt(x * x + y * y + z * z) || 1;
+      sphereTargets[i] = (x / len) * SPHERE_R;
+      sphereTargets[i + 1] = (y / len) * SPHERE_R;
+      sphereTargets[i + 2] = (z / len) * SPHERE_R;
+    }
+  }
+  const particleSphereTargets = new Float32Array(particlePositions.length);
+  {
+    const SPHERE_R = 1.25;
+    for (let i = 0; i < particlePositions.length; i += 3) {
+      const x = particlePositions[i], y = particlePositions[i + 1], z = particlePositions[i + 2];
+      const len = Math.sqrt(x * x + y * y + z * z) || 1;
+      particleSphereTargets[i] = (x / len) * SPHERE_R;
+      particleSphereTargets[i + 1] = (y / len) * SPHERE_R;
+      particleSphereTargets[i + 2] = (z / len) * SPHERE_R;
+    }
+  }
+
   // Polygon glitch system
   const chaliceOrig = new Float32Array((positions.array as Float32Array).length);
   chaliceOrig.set(positions.array as Float32Array);
@@ -398,7 +423,7 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
 
   let converge = 0;
   const PENT_RADIUS = 1.55;
-  const PENT_PHASE = -Math.PI / 2;
+  const PENT_PHASE = Math.PI / 2;
   const ringWorldRadius = 1.55;
   const ringEdgeVec = new THREE.Vector3();
   const chalProjVec = new THREE.Vector3();
@@ -448,6 +473,22 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
         scheduleNextGlitch(current);
       }
       applyGlitch(current);
+
+      // Sphere morph — lerp chalice vertices toward sphere when converging
+      if (converge > 0.001) {
+        const arr = positions.array as Float32Array;
+        const pArr = particlePositions;
+        const c = converge;
+        const ic = 1 - c;
+        for (let i = 0; i < arr.length; i++) {
+          arr[i] = arr[i] * ic + sphereTargets[i] * c;
+        }
+        for (let i = 0; i < pArr.length; i++) {
+          pArr[i] = pArr[i] * ic + particleSphereTargets[i] * c;
+        }
+        positions.needsUpdate = true;
+        particleGeom.attributes.position.needsUpdate = true;
+      }
 
       gridUniforms.uTime.value += dt;
 
