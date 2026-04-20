@@ -110,31 +110,6 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
   const particles = new THREE.Points(particleGeom, particleMat);
   chalice.add(particles);
 
-  // Sphere morph targets — project each chalice vertex onto a unit sphere
-  const sphereTargets = new Float32Array((positions.array as Float32Array).length);
-  {
-    const arr = positions.array as Float32Array;
-    const SPHERE_R = 1.25;
-    for (let i = 0; i < arr.length; i += 3) {
-      const x = arr[i], y = arr[i + 1], z = arr[i + 2];
-      const len = Math.sqrt(x * x + y * y + z * z) || 1;
-      sphereTargets[i] = (x / len) * SPHERE_R;
-      sphereTargets[i + 1] = (y / len) * SPHERE_R;
-      sphereTargets[i + 2] = (z / len) * SPHERE_R;
-    }
-  }
-  const particleSphereTargets = new Float32Array(particlePositions.length);
-  {
-    const SPHERE_R = 1.25;
-    for (let i = 0; i < particlePositions.length; i += 3) {
-      const x = particlePositions[i], y = particlePositions[i + 1], z = particlePositions[i + 2];
-      const len = Math.sqrt(x * x + y * y + z * z) || 1;
-      particleSphereTargets[i] = (x / len) * SPHERE_R;
-      particleSphereTargets[i + 1] = (y / len) * SPHERE_R;
-      particleSphereTargets[i + 2] = (z / len) * SPHERE_R;
-    }
-  }
-
   // Polygon glitch system
   const chaliceOrig = new Float32Array((positions.array as Float32Array).length);
   chaliceOrig.set(positions.array as Float32Array);
@@ -409,13 +384,58 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
 
   let mouseClientX = -1e4;
   let mouseClientY = -1e4;
+
+  // Drag interaction — rotate chalice + dolly camera
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragRotY = 0;
+  let dragRotX = 0;
+  const DRAG_SENSITIVITY = 0.005;
+  const DOLLY_SENSITIVITY = 0.008;
+  const CAM_Z_MIN = 4.5;
+  const CAM_Z_MAX = 12;
+  let camZ = camera.position.z;
+
+  function onPointerDown(e: PointerEvent) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.style.cursor = 'grabbing';
+  }
+  function onPointerUp(e: PointerEvent) {
+    isDragging = false;
+    canvas.releasePointerCapture(e.pointerId);
+    canvas.style.cursor = '';
+  }
+
   function onMove(e: PointerEvent) {
     mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
     mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
     mouseClientX = e.clientX;
     mouseClientY = e.clientY;
+    if (isDragging) {
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      dragRotY += dx * DRAG_SENSITIVITY;
+      dragRotX += dy * DRAG_SENSITIVITY;
+      dragRotX = Math.max(-1.2, Math.min(1.2, dragRotX));
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+    }
   }
+
+  function onWheel(e: WheelEvent) {
+    camZ = Math.max(CAM_Z_MIN, Math.min(CAM_Z_MAX, camZ + e.deltaY * DOLLY_SENSITIVITY));
+  }
+
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointerup', onPointerUp);
+  canvas.addEventListener('pointercancel', onPointerUp);
   window.addEventListener('pointermove', onMove, { passive: true });
+  canvas.addEventListener('wheel', onWheel, { passive: true });
   window.addEventListener('pointerleave', () => {
     mouseClientX = -1e4;
     mouseClientY = -1e4;
@@ -443,12 +463,20 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
     elapsed += dt;
 
     if (!reduce.matches) {
-      chalice.rotation.y += ROT_SPEED;
-      chalice.rotation.x = Math.sin(t * 0.005) * 0.06 - mouseY * 0.05;
-      chalice.rotation.z = mouseX * 0.04;
+      if (isDragging) {
+        chalice.rotation.y = dragRotY;
+        chalice.rotation.x = dragRotX;
+      } else {
+        chalice.rotation.y += ROT_SPEED;
+        dragRotY = chalice.rotation.y;
+        chalice.rotation.x = Math.sin(t * 0.005) * 0.06 - mouseY * 0.05;
+        dragRotX = chalice.rotation.x;
+      }
+      chalice.rotation.z = isDragging ? 0 : mouseX * 0.04;
 
       camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.025;
       camera.position.y += (-mouseY * 0.2 + 0.15 - camera.position.y) * 0.025;
+      camera.position.z += (camZ - camera.position.z) * 0.06;
       camera.lookAt(0, 0.2, 0);
 
       particleMat.opacity = 0.4 + 0.35 * Math.sin(t * 0.02);
@@ -473,22 +501,6 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
         scheduleNextGlitch(current);
       }
       applyGlitch(current);
-
-      // Sphere morph — lerp chalice vertices toward sphere when converging
-      if (converge > 0.001) {
-        const arr = positions.array as Float32Array;
-        const pArr = particlePositions;
-        const c = converge;
-        const ic = 1 - c;
-        for (let i = 0; i < arr.length; i++) {
-          arr[i] = arr[i] * ic + sphereTargets[i] * c;
-        }
-        for (let i = 0; i < pArr.length; i++) {
-          pArr[i] = pArr[i] * ic + particleSphereTargets[i] * c;
-        }
-        positions.needsUpdate = true;
-        particleGeom.attributes.position.needsUpdate = true;
-      }
 
       gridUniforms.uTime.value += dt;
 
@@ -553,8 +565,15 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
           const rect = canvas.getBoundingClientRect();
           const sx = (projVec.x * 0.5 + 0.5) * rect.width;
           const sy = (-projVec.y * 0.5 + 0.5) * rect.height;
-          nodeLabels[i].style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%)`;
-          nodeLabels[i].style.opacity = String(avoid);
+          const depth = projVec.z;
+          const scale = converge > 0.5
+            ? Math.max(0.85, 1 - depth * 0.3)
+            : Math.max(0.5, 1 - depth * 0.6);
+          const opacity = converge > 0.5
+            ? Math.max(0.75, avoid)
+            : avoid;
+          nodeLabels[i].style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%) scale(${scale})`;
+          nodeLabels[i].style.opacity = String(opacity);
           if (!nodeLabels[i].classList.contains('is-positioned')) {
             nodeLabels[i].classList.add('is-positioned');
           }
@@ -580,6 +599,10 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
     cancelAnimationFrame(raf);
     ro.disconnect();
     window.removeEventListener('pointermove', onMove);
+    canvas.removeEventListener('pointerdown', onPointerDown);
+    canvas.removeEventListener('pointerup', onPointerUp);
+    canvas.removeEventListener('pointercancel', onPointerUp);
+    canvas.removeEventListener('wheel', onWheel);
     renderer.dispose();
     chaliceGeom.dispose();
     chaliceMat.dispose();
@@ -600,7 +623,7 @@ export function initHero(canvas: HTMLCanvasElement, nodeLabels?: HTMLElement[]) 
       (m.material as THREE.MeshBasicMaterial).dispose();
     }
     for (const l of nodeLines) l.geometry.dispose();
-    nodeLineMat.dispose();
+    for (const lm of nodeLineMats) lm.dispose();
   };
 }
 

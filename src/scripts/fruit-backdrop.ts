@@ -16,7 +16,7 @@
  */
 import * as THREE from 'three';
 
-export type FruitName = 'pineapple' | 'banana' | 'apple' | 'grape' | 'tomato';
+export type FruitName = 'pineapple' | 'banana' | 'apple' | 'grape' | 'tomato' | 'dodecahedron' | 'stella' | 'hypercube';
 
 function wireMaterial(
   mode: 'bone' | 'void',
@@ -116,6 +116,53 @@ function buildTomato(mat: THREE.Material): THREE.Group {
   return g;
 }
 
+// Dodecahedron — 12-faced Platonic solid
+function buildDodecahedron(mat: THREE.Material): THREE.Group {
+  const g = new THREE.Group();
+  const dodeca = new THREE.Mesh(new THREE.DodecahedronGeometry(1.1, 0), mat);
+  g.add(dodeca);
+  return g;
+}
+
+// Stella octangula — two interpenetrating tetrahedra (compound solid)
+function buildStella(mat: THREE.Material): THREE.Group {
+  const g = new THREE.Group();
+  const t1 = new THREE.Mesh(new THREE.TetrahedronGeometry(1.2, 0), mat);
+  g.add(t1);
+  const t2 = new THREE.Mesh(new THREE.TetrahedronGeometry(1.2, 0), mat);
+  t2.rotation.set(Math.PI, 0, Math.PI / 3);
+  g.add(t2);
+  return g;
+}
+
+// Hypercube — tesseract projection (cube within cube, edges connected)
+function buildHypercube(mat: THREE.Material): THREE.Group {
+  const g = new THREE.Group();
+  const outer = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), mat);
+  g.add(outer);
+  const inner = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), mat);
+  inner.rotation.set(0.3, 0.4, 0.2);
+  g.add(inner);
+  const corners: [number, number, number][] = [
+    [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1],
+    [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1],
+  ];
+  const lineMat = new THREE.LineBasicMaterial({
+    color: (mat as THREE.MeshBasicMaterial).color,
+    transparent: true,
+    opacity: (mat as THREE.MeshBasicMaterial).opacity * 0.6,
+  });
+  for (const [cx, cy, cz] of corners) {
+    const geom = new THREE.BufferGeometry();
+    const o = 0.8, i = 0.35;
+    geom.setAttribute('position', new THREE.Float32BufferAttribute([
+      cx * o, cy * o, cz * o, cx * i, cy * i, cz * i,
+    ], 3));
+    g.add(new THREE.Line(geom, lineMat));
+  }
+  return g;
+}
+
 type FruitConfig = {
   build: (mat: THREE.Material) => THREE.Group;
   position: [number, number, number];
@@ -128,6 +175,9 @@ const CONFIGS: Record<FruitName, FruitConfig> = {
   apple: { build: buildApple, position: [2.1, -0.4, 0], scale: 1.0 },
   grape: { build: buildGrape, position: [-2.3, -0.2, 0], scale: 0.85 },
   tomato: { build: buildTomato, position: [2.2, 0.3, 0], scale: 1.05 },
+  dodecahedron: { build: buildDodecahedron, position: [-2.0, 0.2, 0], scale: 0.9 },
+  stella: { build: buildStella, position: [2.0, -0.1, 0], scale: 0.95 },
+  hypercube: { build: buildHypercube, position: [-1.8, 0.3, 0], scale: 1.0 },
 };
 
 // -----------------------------------------------------------------------------

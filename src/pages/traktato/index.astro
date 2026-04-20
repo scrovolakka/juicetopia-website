@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import FruitBackdrop from '~/components/FruitBackdrop.astro';
 import { getCollection } from 'astro:content';
 import { assertUniqueIds } from '~/utils/assert-unique-ids';
 
@@ -37,6 +38,7 @@ const sections = kindOrder
 ---
 
 <BaseLayout title="TRAKTATO" description="juicetopia — 論集 / papers & specs." mode="bone">
+  <FruitBackdrop fruit="dodecahedron" />
   <section class="traktato page-column flow-16">
     <header class="flow" data-reveal>
       <h1 class="section-title">

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import FruitBackdrop from '~/components/FruitBackdrop.astro';
 import { getCollection } from 'astro:content';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -22,7 +23,8 @@ const kindLabel: Record<string, { en: string; jp: string }> = {
 };
 ---
 
-<BaseLayout title="NOTA" description="juicetopia — nota-di pana.">
+<BaseLayout title="NOTA" description="juicetopia — nota-di pana." mode="void">
+  <FruitBackdrop fruit="hypercube" />
   <article class="about page-column">
     <header class="about-head" data-reveal>
       <h1 class="about-title">NOTA<br /><span class="jp">Juicetpiaについて</span></h1>
