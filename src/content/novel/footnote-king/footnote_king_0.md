@@ -5,7 +5,7 @@ publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 0
 summary: "杯は善悪の秤ではなく、増殖の選別機である。"
-heroImage: ../../../assets/img/rectangle_large_type_2_c81b0fdc15f2f5b215aef4b8d9ef1152.webp
+heroImage: ../../../assets/img/iseispremuti0.png
 heroAspect: "16:9"
 ---
 
