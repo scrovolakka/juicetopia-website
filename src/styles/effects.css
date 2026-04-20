@@ -53,7 +53,7 @@
   transform: translateY(-100%);
 }
 .fx-sweep.is-running::after {
-  animation: sweep-down 260ms var(--ease-out) forwards;
+  animation: sweep-down var(--dur-sweep) var(--ease-out) forwards;
 }
 
 @keyframes sweep-down {
@@ -70,7 +70,9 @@
   position: relative;
   display: inline-block;
   color: var(--color-ink);
-  transition: text-shadow var(--dur-fast) var(--ease-out);
+  transition:
+    text-shadow var(--dur-mid) var(--ease-out),
+    color var(--dur-mid) var(--ease-out);
 }
 
 .acid-link::after {
@@ -100,7 +102,7 @@
 
 /* View-transition-friendly fade for page contents */
 .page-fade {
-  animation: page-in var(--dur-slow) var(--ease-out) both;
+  animation: page-in var(--dur-page) var(--ease-out) both;
 }
 @keyframes page-in {
   from {
