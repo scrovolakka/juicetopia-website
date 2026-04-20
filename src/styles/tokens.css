@@ -51,6 +51,8 @@
   /* Line heights */
   --lh-body: 1.65;
   --lh-reading: 1.95;
+  --lh-reading-tight: 1.82;
+  --lh-reading-loose: 2.05;
   --lh-meta: 1.5;
 
   /* Letter spacing */
@@ -84,8 +86,10 @@
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
   --dur-fast: 150ms;
-  --dur-mid: 240ms;
+  --dur-mid: 220ms;
   --dur-slow: 400ms;
+  --dur-page: 320ms;
+  --dur-sweep: 260ms;
 
   /* Z layers */
   --z-scanlines: 9998;

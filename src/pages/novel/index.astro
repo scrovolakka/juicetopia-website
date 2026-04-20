@@ -49,6 +49,14 @@ const sections = seriesOrderList
         <span class="jp">小説</span>
       </h1>
       <p class="mono">INDEX · {pad(total)} CHAPTER{total === 1 ? '' : 'S'} · {sections.length} SECTION{sections.length === 1 ? '' : 'S'}</p>
+      {sortedAll[0] && (
+        <p class="start-guide">
+          初読推奨：
+          <a class="acid-link mono-strong" href={`${base}/novel/${sortedAll[0].slug}/`}>
+            CH.{pad(sortedAll[0].data.chapterNumber)} / {sortedAll[0].data.title}
+          </a>
+        </p>
+      )}
     </header>
 
     <div class="rule"></div>
@@ -71,7 +79,10 @@ const sections = seriesOrderList
                 <li class="ch">
                   <a class="ch-link" href={href}>
                     <span class="col-num mono">CH.{pad(c.data.chapterNumber)}</span>
-                    <span class="col-title">{c.data.title}</span>
+                    <span class="col-main">
+                      <span class="col-title">{c.data.title}</span>
+                      {c.data.summary && <span class="col-summary">{c.data.summary}</span>}
+                    </span>
                     <span class="col-date mono meta-dim">{date}</span>
                   </a>
                 </li>
@@ -105,6 +116,15 @@ const sections = seriesOrderList
   }
   .section-block + .section-block {
     margin-top: var(--space-10);
+  }
+  .start-guide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--color-ink-muted);
+    font-family: var(--font-mincho);
+    letter-spacing: 0.04em;
   }
   .sec-head {
     display: flex;
@@ -147,7 +167,7 @@ const sections = seriesOrderList
   .ch-link {
     display: grid;
     grid-template-columns: 4rem 1fr auto;
-    align-items: baseline;
+    align-items: start;
     gap: var(--space-4);
     padding: var(--space-5) 0;
     transition: background var(--dur-fast) var(--ease-out);
@@ -160,10 +180,21 @@ const sections = seriesOrderList
     color: var(--color-acid);
   }
   .col-title {
+    display: block;
     font-family: var(--font-mincho);
     font-size: var(--fs-reading);
     letter-spacing: 0.04em;
     color: var(--color-ink);
+  }
+  .col-main {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .col-summary {
+    color: var(--color-ink-muted);
+    font-size: 0.86rem;
+    letter-spacing: 0.03em;
+    line-height: 1.55;
   }
   @media (max-width: 40rem) {
     .ch-link {
