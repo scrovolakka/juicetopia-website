@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import FruitBackdrop from '~/components/FruitBackdrop.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import { buildBlogPostingNode, buildBreadcrumbNode } from '~/lib/jsonld';
@@ -60,6 +61,7 @@ const jsonLdNodes = [
   ogImageAlt={latestHero?.entry.data.heroAlt ?? latestHero?.entry.data.title}
   jsonLdNodes={jsonLdNodes}
 >
+  <FruitBackdrop fruit="stella" />
   <section class="cronika page-column flow-16">
     <header class="flow" data-reveal>
       <h1 class="section-title">
