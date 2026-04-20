@@ -6,7 +6,7 @@ codexId: M.003
 order: 3
 cluster: 手続き
 summary: 記憶・経験・存在を流動資源へと圧搾する手続き。残渣は、ときに記憶として拾われる。
-seeAlso: [suktonium, sacrabolla, zuk-sha]
+seeAlso: [suktonium, sacrabolla, zuk-sha, succulica]
 leksikoRefs: [suk-forna, suktonium]
 ---
 

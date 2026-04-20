@@ -6,7 +6,7 @@ codexId: M.002
 order: 2
 cluster: 詩
 summary: 空気を震わせるのではなく、定義を書き換える言葉。発声者は多く、読解者は少ない。
-seeAlso: [nota-di-dol]
+seeAlso: [nota-di-dol, promptus]
 leksikoRefs: [komanda]
 ---
 
