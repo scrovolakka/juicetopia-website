@@ -1,15 +1,15 @@
 /**
- * Fruit backdrop — a low-poly wireframe 3D fruit slowly drifting behind the
- * content of each route index page. The canvas is a fixed, full-viewport
- * element with `z-index: 0`; content stacks above via `.page { z-index: 1 }`.
+ * Geometric backdrop — a low-poly wireframe mathematical shape slowly drifting
+ * behind the content of each route index page. The canvas is a fixed,
+ * full-viewport element with `z-index: 0`; content stacks above via
+ * `.page { z-index: 1 }`.
  *
- * Five fruits map to the five content routes, each tied to a King-of-Fruit
- * character:
- *   - pineapple (ジジバルバ)  → /novel/
- *   - banana    (スクロヴロッカ) → /characters/
- *   - apple     (モルドラッサ)   → /mondo/
- *   - grape     (グリッボロンカ) → /lexicon/
- *   - tomato    (ポンプリーズカ) → /gallery/
+ * Five mathematical shapes map to the five content routes:
+ *   - torus knot (trefoil)  → /novel/
+ *   - Möbius strip          → /characters/
+ *   - icosahedron (nested)  → /mondo/
+ *   - octahedron cluster    → /lexicon/
+ *   - torus (double ring)   → /gallery/
  *
  * Motion: slow Y rotation + gentle X wobble + scroll-driven Y drift for a
  * parallax float. Disabled under prefers-reduced-motion.
@@ -18,23 +18,15 @@ import * as THREE from 'three';
 
 export type FruitName = 'pineapple' | 'banana' | 'apple' | 'grape' | 'tomato';
 
-// -----------------------------------------------------------------------------
-// Shared wireframe material.
-//
-// First-time visitors see the fruit drawn in the site's neutral ink/bone
-// palette — muted, part of the paper. Returning readers (the flag
-// `jct-visited` is set in localStorage after the first encounter) see the
-// fruit in the acid lime accent — a small reward for coming back.
-// -----------------------------------------------------------------------------
 function wireMaterial(
   mode: 'bone' | 'void',
   returning: boolean,
 ): THREE.MeshBasicMaterial {
   const color = returning
-    ? 0xd8ff3a // acid lime for the second visit onward
+    ? 0xd8ff3a
     : mode === 'void'
-      ? 0xefebe2 // bone wireframe on dark pages
-      : 0x0f0e0c; // ink wireframe on paper pages
+      ? 0xefebe2
+      : 0x0f0e0c;
   return new THREE.MeshBasicMaterial({
     color,
     wireframe: true,
@@ -44,138 +36,85 @@ function wireMaterial(
   });
 }
 
-// -----------------------------------------------------------------------------
-// Geometry builders
-// -----------------------------------------------------------------------------
-
+// Trefoil torus knot — three-lobed knot, mathematically beautiful
 function buildPineapple(mat: THREE.Material): THREE.Group {
   const g = new THREE.Group();
-
-  // Ellipsoid body — low-poly sphere scaled into a pine shape.
-  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 14), mat);
-  body.scale.set(0.82, 1.2, 0.82);
-  g.add(body);
-
-  // Spiky leaf crown on top (7 radially arranged cones).
-  for (let i = 0; i < 7; i++) {
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.7, 3), mat);
-    const a = (i / 7) * Math.PI * 2;
-    leaf.position.set(Math.cos(a) * 0.15, 1.45, Math.sin(a) * 0.15);
-    // Tilt each leaf slightly outward.
-    leaf.rotation.x = -Math.cos(a) * 0.35;
-    leaf.rotation.z = Math.sin(a) * 0.35;
-    g.add(leaf);
-  }
-
+  const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.9, 0.28, 80, 8, 2, 3), mat);
+  g.add(knot);
   return g;
 }
 
+// Möbius strip — parametric surface with a single side
 function buildBanana(mat: THREE.Material): THREE.Group {
   const g = new THREE.Group();
-
-  // A gentle crescent curve traced by CatmullRom through five control points.
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-1.3, -0.3, 0),
-    new THREE.Vector3(-0.7, 0.3, 0),
-    new THREE.Vector3(0.0, 0.55, 0),
-    new THREE.Vector3(0.7, 0.3, 0),
-    new THREE.Vector3(1.3, -0.3, 0),
-  ]);
-  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.24, 8, false), mat);
-  g.add(tube);
-
-  // Stem cap at the top curve.
-  const stem = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 4), mat);
-  stem.position.set(-1.3, -0.35, 0);
-  stem.rotation.z = 0.5;
-  g.add(stem);
-
+  const SEGMENTS = 80;
+  const STRIP_W = 0.4;
+  const R = 1.1;
+  const vertices: number[] = [];
+  const indices: number[] = [];
+  for (let i = 0; i <= SEGMENTS; i++) {
+    const u = (i / SEGMENTS) * Math.PI * 2;
+    for (let j = 0; j <= 1; j++) {
+      const v = (j - 0.5) * STRIP_W;
+      const x = (R + v * Math.cos(u / 2)) * Math.cos(u);
+      const y = (R + v * Math.cos(u / 2)) * Math.sin(u);
+      const z = v * Math.sin(u / 2);
+      vertices.push(x, y, z);
+    }
+  }
+  for (let i = 0; i < SEGMENTS; i++) {
+    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+    indices.push(a, b, c, b, d, c);
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geom.setIndex(indices);
+  const mesh = new THREE.Mesh(geom, mat);
+  g.add(mesh);
   return g;
 }
 
+// Nested icosahedra — two concentric icosahedra at different scales
 function buildApple(mat: THREE.Material): THREE.Group {
   const g = new THREE.Group();
-
-  // Slightly squashed sphere for an apple silhouette.
-  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), mat);
-  body.scale.set(1.05, 0.92, 1.05);
-  g.add(body);
-
-  // Stem.
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.28, 6), mat);
-  stem.position.y = 1.02;
-  g.add(stem);
-
-  // A small leaf attached near the stem.
-  const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.35, 3), mat);
-  leaf.position.set(0.12, 1.1, 0);
-  leaf.rotation.z = -0.7;
-  g.add(leaf);
-
+  const outer = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, 0), mat);
+  g.add(outer);
+  const inner = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), mat);
+  inner.rotation.set(0.3, 0.5, 0.2);
+  g.add(inner);
   return g;
 }
 
+// Octahedron cluster — 4 interlocking octahedra at rotated orientations
 function buildGrape(mat: THREE.Material): THREE.Group {
   const g = new THREE.Group();
-
-  // Triangular cluster of 9 grapes — same arrangement as the SVG portrait.
-  const positions: Array<[number, number, number]> = [
-    [0, 0.9, 0],
-    [-0.32, 0.45, 0.05],
-    [0.32, 0.45, 0.05],
-    [-0.64, 0.0, 0.0],
-    [0.0, 0.0, 0.15],
-    [0.64, 0.0, 0.0],
-    [-0.32, -0.45, 0.05],
-    [0.32, -0.45, 0.05],
-    [0.0, -0.9, 0.0],
+  const rotations: [number, number, number][] = [
+    [0, 0, 0],
+    [Math.PI / 4, 0, Math.PI / 4],
+    [0, Math.PI / 4, Math.PI / 4],
+    [Math.PI / 4, Math.PI / 4, 0],
   ];
-  for (const [x, y, z] of positions) {
-    const grape = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 6), mat);
-    grape.position.set(x, y, z);
-    g.add(grape);
+  for (const [rx, ry, rz] of rotations) {
+    const octa = new THREE.Mesh(new THREE.OctahedronGeometry(1.0, 0), mat);
+    octa.rotation.set(rx, ry, rz);
+    g.add(octa);
   }
-
-  // Stem rising above the cluster.
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6), mat);
-  stem.position.y = 1.25;
-  g.add(stem);
-
-  // Two small leaves at the stem crown.
-  for (const dir of [-1, 1]) {
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.3, 3), mat);
-    leaf.position.set(dir * 0.18, 1.25, 0);
-    leaf.rotation.z = -dir * 0.8;
-    g.add(leaf);
-  }
-
   return g;
 }
 
+// Double torus — two interlocking tori (Hopf link)
 function buildTomato(mat: THREE.Material): THREE.Group {
   const g = new THREE.Group();
-
-  // Flattened sphere body.
-  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), mat);
-  body.scale.set(1.1, 0.82, 1.1);
-  g.add(body);
-
-  // Five sepal leaves radiating from the top.
-  for (let i = 0; i < 5; i++) {
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.45, 3), mat);
-    const a = (i / 5) * Math.PI * 2;
-    leaf.position.set(Math.cos(a) * 0.22, 0.86, Math.sin(a) * 0.22);
-    leaf.rotation.x = -Math.cos(a) * 1.1;
-    leaf.rotation.z = Math.sin(a) * 1.1;
-    g.add(leaf);
-  }
-
+  const t1 = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.2, 12, 32), mat);
+  g.add(t1);
+  const t2 = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.2, 12, 32), mat);
+  t2.rotation.x = Math.PI / 2;
+  t2.position.x = 0.9;
+  t1.position.x = -0.45;
+  t2.position.x = 0.45;
+  g.add(t2);
   return g;
 }
-
-// -----------------------------------------------------------------------------
-// Per-fruit positioning / sizing — mixed left/right so each page feels unique.
-// -----------------------------------------------------------------------------
 
 type FruitConfig = {
   build: (mat: THREE.Material) => THREE.Group;

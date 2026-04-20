@@ -33,36 +33,23 @@
   );
 }
 
-/* Route-sweep (acid horizontal bar, triggered on nav) */
+/* Route-sweep: full-screen blackout flash on nav */
 .fx-sweep {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-sweep);
-  overflow: hidden;
+  background: #0a0908;
+  opacity: 0;
 }
-.fx-sweep::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -4px;
-  height: 2px;
-  background: var(--color-acid);
-  box-shadow: 0 0 12px var(--color-acid-dim);
-  transform: translateY(-100%);
-}
-.fx-sweep.is-running::after {
-  animation: sweep-down 260ms var(--ease-out) forwards;
+.fx-sweep.is-running {
+  animation: blackout 200ms var(--ease-out) forwards;
 }
 
-@keyframes sweep-down {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(100vh);
-  }
+@keyframes blackout {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Acid link — underline from left + chromatic aberration on hover */
@@ -144,7 +131,7 @@ a:not(:active) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .fx-sweep.is-running::after {
+  .fx-sweep.is-running {
     animation: none;
   }
   .acid-link:hover,
