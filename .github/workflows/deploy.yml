@@ -23,7 +23,7 @@ jobs:
       - name: Build with Astro
         uses: withastro/action@v3
         with:
-          node-version: 20
+          node-version: 22
           package-manager: npm@latest
 
   deploy:
@@ -35,4 +35,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
