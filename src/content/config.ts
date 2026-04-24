@@ -18,6 +18,11 @@ const novel = defineCollection({
       // Aspect for the in-page hero figure. Does not affect the OG image
       // (which is always cropped to 1200×630 for social).
       heroAspect: z.enum(['16:9', '4:3', '3:2', '1:1', '1.91:1']).default('16:9'),
+      source: z.object({
+        repo: z.string(),
+        path: z.string(),
+        branch: z.string().default('main'),
+      }).optional(),
     }),
 });
 
