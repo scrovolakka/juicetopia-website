@@ -9,6 +9,7 @@ import remarkBlockquoteCaption from './src/plugins/remark-blockquote-caption';
 import remarkNoIndent from './src/plugins/remark-no-indent';
 import remarkAspectImage from './src/plugins/remark-aspect-image';
 import remarkMermaid from './src/plugins/remark-mermaid';
+import remarkExternalSource from './src/plugins/remark-external-source';
 
 // Deployed as a project site at scrovolakka.github.io/juicetopia-website/
 // If ever moved to a user site (scrovolakka.github.io) or a custom domain, set `base: '/'`.
@@ -20,6 +21,7 @@ export default defineConfig({
   integrations: [sitemap()],
   markdown: {
     remarkPlugins: [
+      remarkExternalSource,
       remarkRuby,
       remarkTcy,
       remarkBlockquoteCaption,
