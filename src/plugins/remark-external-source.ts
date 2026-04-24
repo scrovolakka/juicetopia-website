@@ -13,9 +13,15 @@ export default function remarkExternalSource() {
     const branch = fm.source.branch ?? 'main';
     const url = `https://raw.githubusercontent.com/${fm.source.repo}/${branch}/${fm.source.path}`;
 
+    const headers: Record<string, string> = {};
+    const token = process.env.SOURCE_REPO_TOKEN;
+    if (token) {
+      headers['Authorization'] = `token ${token}`;
+    }
+
     let text: string;
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { headers });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       text = await res.text();
     } catch (err) {
