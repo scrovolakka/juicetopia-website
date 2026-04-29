@@ -10,6 +10,7 @@ import remarkNoIndent from './src/plugins/remark-no-indent';
 import remarkAspectImage from './src/plugins/remark-aspect-image';
 import remarkMermaid from './src/plugins/remark-mermaid';
 import remarkExternalSource from './src/plugins/remark-external-source';
+import rehypeFootnoteOrder from './src/plugins/rehype-footnote-order';
 
 // Deployed as a project site at scrovolakka.github.io/juicetopia-website/
 // If ever moved to a user site (scrovolakka.github.io) or a custom domain, set `base: '/'`.
@@ -38,6 +39,10 @@ export default defineConfig({
       // Renders the math nodes produced by remark-math into KaTeX HTML.
       // Requires katex.min.css (loaded only in PaperLayout).
       [rehypeKatex, { strict: false, trust: false }],
+      // Re-aligns footnote display order with the [^N] label order in source.
+      // Necessary for chapters whose body cites only a subset of footnotes and
+      // relies on inter-footnote references (e.g. footnote_king_finale).
+      rehypeFootnoteOrder,
     ],
   },
   image: {
