@@ -5,7 +5,7 @@ publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 1
 summary: "奇跡は一夜でよく、制度は毎日でよい。"
-heroImage: ../../../assets/img/rectangle_large_type_2_2e073342db2fd1cff641056efa1beb05.webp
+heroImage: ../../../assets/img/iseispremuti1.png
 heroAspect: "16:9"
 ---
 

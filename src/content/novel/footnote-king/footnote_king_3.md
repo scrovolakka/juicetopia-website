@@ -5,7 +5,7 @@ publishedAt: 2026-04-15
 series: "脚注の王"
 seriesOrder: 3
 summary: "理解はしばしば、要約の長さに帰依する。"
-heroImage: ../../../assets/img/rectangle_large_type_2_a0d83590dcb5c0315feafec542d71fd3.webp
+heroImage: ../../../assets/img/iseispremuti3.png
 heroAspect: "16:9"
 ---
 
